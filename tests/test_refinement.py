@@ -68,3 +68,16 @@ def test_returns_empty_when_no_overlaps_but_bounds_overlap(
 ):
     refinement = Refinement(GeoSeries([diamond]))
     assert len(refinement(polygon_inside_diamond_bounds)) == 0
+
+
+def test_can_be_created_from_a_geoseries(four_square_grid):
+    refinement = Refinement(four_square_grid.geometry)
+    assert refinement
+
+
+def test_contained_in_method_returns_empty_when_not_contained_in_any(
+    four_square_grid, square
+):
+    refinement = Refinement(four_square_grid)
+    contained_in = refinement.contained_in(square)
+    assert len(contained_in) == 0
