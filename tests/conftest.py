@@ -12,3 +12,23 @@ def four_square_grid():
     df = gp.GeoDataFrame({"ID": ["a", "b", "c", "d"], "geometry": [a, b, c, d]})
     df.crs = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
     return df
+
+
+@pytest.fixture
+def square():
+    return Polygon([(0.5, 0.5), (0.5, 1.5), (1.5, 1.5), (1.5, 0.5)])
+
+
+@pytest.fixture
+def distant_polygon():
+    return Polygon([(100, 101), (101, 101), (101, 100)])
+
+
+@pytest.fixture
+def diamond():
+    return Polygon([(100, 0), (0, 100), (-100, 0), (0, -100)])
+
+
+@pytest.fixture
+def polygon_inside_diamond_bounds():
+    return Polygon([(90, 90), (91, 90), (91, 91), (90, 91)])
