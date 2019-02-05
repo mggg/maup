@@ -32,3 +32,18 @@ def diamond():
 @pytest.fixture
 def polygon_inside_diamond_bounds():
     return Polygon([(90, 90), (91, 90), (91, 91), (90, 91)])
+
+
+@pytest.fixture
+def squares_within_four_square_grid():
+    return gp.GeoSeries(
+        [
+            # both fit inside a:
+            Polygon([(0, 0), (0, 0.5), (0.5, 0.5), (0.5, 0)]),
+            Polygon([(0.5, 0.5), (1, 0.5), (1, 1), (0.5, 1)]),
+            # is exactly b:
+            Polygon([(0, 1), (0, 2), (1, 2), (1, 1)]),
+            # fits neatly inside d:
+            Polygon([(1.25, 1.25), (1.25, 1.75), (1.75, 1.75), (1.75, 1.25)]),
+        ]
+    )
