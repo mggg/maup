@@ -13,7 +13,7 @@ setup(
     author_email="max@mggg.org",
     long_description=long_description,
     long_description_content_type="text/x-rst",
-    url="https://github.com/mggg/spatial-ops",
+    url="https://github.com/maxhully/spatial-ops",
     packages=find_packages(exclude=("tests",)),
     install_requires=requirements,
     classifiers=[
