@@ -1,3 +1,4 @@
+import numpy as np
 import pandas
 import scipy.sparse
 
@@ -24,15 +25,20 @@ class IntersectionMatrix:
                 "source geometries. Maybe you meant to interpolate "
                 "in the opposite direction?"
             )
-        interpolated_data = self.matrix.dot(series.to_numpy())
+        name = getattr(series, "name", None)
+        vector = convert_to_array(series)
+        interpolated_data = self.matrix * vector
         return pandas.Series(
-            data=interpolated_data, name=series.name, index=self.targets_index
+            data=interpolated_data, name=name, index=self.targets_index
         )
 
     def transpose(self):
         return self.__class__(
             self.matrix.transpose(), self.targets_index, self.sources_index
         )
+
+    def preserves_mass(self):
+        return (np.sum(self.matrix, axis=1) == np.ones(len(self.sources_index))).all()
 
     @classmethod
     def from_geometries(cls, sources, targets, weight_by):
@@ -42,6 +48,12 @@ class IntersectionMatrix:
             reindexed_sources, reindexed_targets, weight_by
         ).tocsr()
         return cls(matrix, sources.index, targets.index)
+
+
+def convert_to_array(series):
+    if hasattr(series, "to_numpy"):
+        return series.to_numpy()
+    return np.asarray(series)
 
 
 def raise_exception_if_not_range_indexed(*datasets):
@@ -59,6 +71,6 @@ def intersection_matrix(sources, targets, weight_by):
     matrix = scipy.sparse.dok_matrix((len(targets), len(sources)))
 
     for (i, j, intersection) in indexed_sources.enumerate_intersections(targets):
-        matrix[i, j] = weight_by(intersection)
+        matrix[i, j] = weight_by(intersection, i, j)
 
     return matrix

@@ -77,3 +77,8 @@ def squares_some_neat_some_overlapping(
     return squares_within_four_square_grid.append(
         square_mostly_in_top_left, ignore_index=True
     )
+
+
+@pytest.fixture
+def big_square():
+    return gp.GeoSeries([Polygon([(0, 0), (2, 0), (2, 2), (0, 2)])])

@@ -25,7 +25,9 @@ def assign_without_area(sources, targets):
 
 
 def assign_by_area(sources, targets):
-    matrix = IntersectionMatrix.from_geometries(sources, targets, lambda g: g.area)
+    matrix = IntersectionMatrix.from_geometries(
+        sources, targets, lambda g, i, j: g.area
+    )
     assignment = pandas.Series(
         numpy.ravel(matrix.matrix.argmax(axis=0)), index=sources.index
     )

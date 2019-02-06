@@ -7,7 +7,7 @@ from spatial_ops import IntersectionMatrix, intersection_matrix
 
 def test_intersection_matrix_returns_expected_matrix(four_square_grid, square):
     result = intersection_matrix(
-        four_square_grid, geopandas.GeoSeries([square]), lambda x: x.area
+        four_square_grid, geopandas.GeoSeries([square]), lambda x, i, j: x.area
     )
 
     assert numpy.asarray(result == numpy.array([[0.25, 0.25, 0.25, 0.25]])).all()
@@ -18,7 +18,7 @@ def test_raises_type_error_for_non_integer_indices(four_square_grid, square):
         intersection_matrix(
             four_square_grid.set_index("ID"),
             geopandas.GeoSeries([square]),
-            lambda x: x.area,
+            lambda x, i, j: x.area,
         )
 
 
@@ -28,7 +28,7 @@ def test_returns_a_series_with_same_index_as_targets(
     four_square_grid["data"] = [1, 1, 1, 1]
 
     matrix = IntersectionMatrix.from_geometries(
-        four_square_grid, square_mostly_in_top_left, lambda x: x.area
+        four_square_grid, square_mostly_in_top_left, lambda x, i, j: x.area
     )
     result = matrix.interpolate(four_square_grid["data"])
 
@@ -42,7 +42,7 @@ def test_works_when_source_indices_are_not_integers(
     four_square_grid = four_square_grid.set_index("ID")
 
     matrix = IntersectionMatrix.from_geometries(
-        four_square_grid, square_mostly_in_top_left, lambda x: x.area
+        four_square_grid, square_mostly_in_top_left, lambda x, i, j: x.area
     )
     result = matrix.interpolate(four_square_grid["data"])
 
@@ -60,7 +60,7 @@ def test_works_when_target_indices_are_not_integers(
     )
 
     matrix = IntersectionMatrix.from_geometries(
-        four_square_grid, square_mostly_in_top_left, lambda x: x.area
+        four_square_grid, square_mostly_in_top_left, lambda x, i, j: x.area
     )
     result = matrix.interpolate(four_square_grid["data"])
 
@@ -93,3 +93,31 @@ def test_raises_value_error_when_asked_to_interpolate_something_of_the_wrong_sha
 
     with pytest.raises(ValueError):
         matrix.interpolate([1, 2, 3])
+
+
+def test_raises_error_when_interpolating_non_numerical_column():
+    _matrix = numpy.matrix([[1, 1], [1, 0]])
+    matrix = IntersectionMatrix(_matrix, sources_index=[1, 2], targets_index=["a", "b"])
+
+    with pytest.raises(ValueError):
+        matrix.interpolate(["x", "y"])
+
+
+def test_can_tell_whether_it_is_a_transport_matrix():
+    _matrix = numpy.matrix([[1, 1], [1, 0]])
+    matrix = IntersectionMatrix(_matrix, sources_index=[1, 2], targets_index=["a", "b"])
+
+    assert not matrix.preserves_mass()
+
+    _matrix = numpy.matrix([[0.5, 0.5], [0.5, 0.5]])
+    matrix = IntersectionMatrix(_matrix, sources_index=[1, 2], targets_index=["a", "b"])
+
+    assert matrix.preserves_mass()
+
+
+def test_must_normalize_area_to_be_a_transport_matrix(four_square_grid, big_square):
+    matrix = IntersectionMatrix.from_geometries(
+        four_square_grid, big_square, lambda x, i, j: x.area / big_square.iloc[i].area
+    )
+
+    assert matrix.preserves_mass()
