@@ -50,18 +50,30 @@ class IndexedGeometries:
                 yield i, j, intersection
 
 
-def assign(sources, targets):
+def assign_without_area(sources, targets):
     indexed_sources = IndexedGeometries(sources)
     return indexed_sources.assign(targets)
 
 
+def assign(sources, targets):
+    assignment = assign_without_area(sources, targets)
+    unassigned = sources[assignment.isna()]
+    assignments_by_area = assign_by_area(unassigned, targets)
+
+    assignment.update(assignments_by_area)
+    return assignment
+
+
+def raise_exception_if_not_range_indexed(*datasets):
+    for series in datasets:
+        if not isinstance(series.index, pandas.RangeIndex):
+            raise TypeError(
+                "The sources and targets must have a RangeIndex indices to "
+                "construct their intersection_matrix"
+            )
+
+
 def intersection_matrix(sources, targets, weight_by):
-    if not (sources.index.is_numeric() and targets.index.is_numeric()):
-        raise TypeError(
-            "Sources and targets must have integer indices "
-            "(see http://pandas.pydata.org/pandas-docs/stable/"
-            "getting_started/basics.html#basics-reindexing for more information)"
-        )
     indexed_sources = IndexedGeometries(sources)
     matrix = scipy.sparse.dok_matrix((len(sources), len(targets)))
 
@@ -71,7 +83,10 @@ def intersection_matrix(sources, targets, weight_by):
 
 
 def assign_by_area(sources, targets):
-    if not (sources.index.is_numeric() and targets.index.is_numeric()):
+    if not (
+        isinstance(sources.index, pandas.RangeIndex)
+        and isinstance(targets.index, pandas.RangeIndex)
+    ):
         return assign_by_area_with_non_integer_indices(sources, targets)
 
     matrix = intersection_matrix(sources, targets, lambda geom: geom.area).tocsr()

@@ -1,18 +1,21 @@
 import pandas
 from numpy import nan
 
-from spatial_ops import assign, assign_by_area, assign_by_area_with_non_integer_indices
+from spatial_ops import (assign, assign_by_area,
+                         assign_by_area_with_non_integer_indices,
+                         assign_without_area)
 
 
 def test_assign_assigns_geometries_when_they_nest_neatly(
     four_square_grid, squares_within_four_square_grid
 ):
-    result = assign(squares_within_four_square_grid, four_square_grid)
+    
+    result = assign_without_area(squares_within_four_square_grid, four_square_grid)
     assert len(list(result)) == len(squares_within_four_square_grid)
 
 
 def test_assign_returns_iterable(four_square_grid, squares_within_four_square_grid):
-    result = assign(squares_within_four_square_grid, four_square_grid)
+    result = assign_without_area(squares_within_four_square_grid, four_square_grid)
     assert iter(result)
 
 
@@ -21,7 +24,7 @@ def test_assignment_has_dtype_of_target_geom_index(
 ):
     target = four_square_grid.set_index("ID")
 
-    result = assign(squares_within_four_square_grid, target)
+    result = assign_without_area(squares_within_four_square_grid, target)
 
     assert result.dtype == target.index.dtype
 
@@ -30,7 +33,7 @@ def test_assign_gives_expected_answer_when_geoms_nest_neatly(
     four_square_grid, squares_within_four_square_grid
 ):
     result = set(
-        assign(
+        assign_without_area(
             squares_within_four_square_grid, four_square_grid.set_index("ID")
         ).items()
     )
@@ -42,7 +45,7 @@ def test_assigns_na_to_geometries_not_fitting_into_any_others(
     left_half_of_square_grid, squares_within_four_square_grid
 ):
     result = set(
-        assign(
+        assign_without_area(
             squares_within_four_square_grid, left_half_of_square_grid.set_index("ID")
         ).items()
     )
@@ -51,7 +54,7 @@ def test_assigns_na_to_geometries_not_fitting_into_any_others(
 
 
 def test_assign_can_be_used_with_groupby(four_square_grid, squares_df):
-    assignment = assign(squares_df, four_square_grid.set_index("ID"))
+    assignment = assign_without_area(squares_df, four_square_grid.set_index("ID"))
 
     result = squares_df.groupby(assignment)
 
@@ -62,7 +65,7 @@ def test_assign_can_be_used_with_groupby(four_square_grid, squares_df):
 
 
 def test_assign_can_be_used_with_groupby_and_aggregate(four_square_grid, squares_df):
-    assignment = assign(squares_df, four_square_grid.set_index("ID"))
+    assignment = assign_without_area(squares_df, four_square_grid.set_index("ID"))
 
     result = squares_df.groupby(assignment)["data"].sum()
 
@@ -73,7 +76,7 @@ def test_assign_can_be_used_with_groupby_and_aggregate(four_square_grid, squares
 class TestAssignByArea:
     def test_gives_same_answer_for_integer_indices(self, four_square_grid, squares_df):
         assignment = assign_by_area(squares_df, four_square_grid)
-        expected = assign(squares_df, four_square_grid)
+        expected = assign_without_area(squares_df, four_square_grid)
         assert (expected == assignment).all()
 
     def test_gives_same_answer_for_targets_with_non_integer_index(
@@ -84,7 +87,7 @@ class TestAssignByArea:
         # sources = squares_df.set_index("ID")
         sources = squares_df
         assignment = assign_by_area_with_non_integer_indices(sources, targets)
-        expected = assign(sources, targets)
+        expected = assign_without_area(sources, targets)
         assert (expected == assignment).all()
 
     def test_gives_same_answer_for_sources_with_non_integer_index(
@@ -93,7 +96,7 @@ class TestAssignByArea:
         targets = four_square_grid
         sources = squares_df.set_index("ID")
         assignment = assign_by_area_with_non_integer_indices(sources, targets)
-        expected = assign(sources, targets)
+        expected = assign_without_area(sources, targets)
         assert (expected == assignment).all()
 
     def test_gives_same_answer_when_both_have_non_integer_indices(
@@ -102,7 +105,7 @@ class TestAssignByArea:
         targets = four_square_grid.set_index("ID")
         sources = squares_df.set_index("ID")
         assignment = assign_by_area_with_non_integer_indices(sources, targets)
-        expected = assign(sources, targets)
+        expected = assign_without_area(sources, targets)
         assert (expected == assignment).all()
 
     def test_gives_expected_answer_when_sources_not_neatly_nested(
@@ -119,5 +122,12 @@ class TestAssignByArea:
         targets = four_square_grid.set_index("ID")
         sources = squares_df.set_index("ID")
         assignment = assign_by_area(sources, targets)
-        expected = assign(sources, targets)
+        expected = assign_without_area(sources, targets)
         assert (expected == assignment).all()
+
+
+def test_assign_dispatches_to_without_area_and_with_area(four_square_grid, squares_some_neat_some_overlapping):
+    assignment = assign(squares_some_neat_some_overlapping, four_square_grid.set_index("ID"))
+    expected = pandas.Series(["a", "a", "b", "d", "b"], index=squares_some_neat_some_overlapping.index)
+
+    assert (expected == assignment).all()

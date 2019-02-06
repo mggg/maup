@@ -68,3 +68,12 @@ def squares_df(squares_within_four_square_grid):
 @pytest.fixture
 def square_mostly_in_top_left():
     return gp.GeoSeries([Polygon([(1.5, 0.5), (1.5, 2), (0, 2), (0, 0.5)])])
+
+
+@pytest.fixture
+def squares_some_neat_some_overlapping(
+    square_mostly_in_top_left, squares_within_four_square_grid
+):
+    return squares_within_four_square_grid.append(
+        square_mostly_in_top_left, ignore_index=True
+    )
