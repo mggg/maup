@@ -27,8 +27,7 @@ def test_indexed_queries_its_spatial_index_when_intersections_is_called(
 ):
     with patch("spatial_ops.indexed_geometries.STRtree") as SpatialIndex:
         spatial_index = SpatialIndex.return_value
-        indexed = IndexedGeometries(four_square_grid)
-        overlaps = indexed.intersections(square)
+        IndexedGeometries(four_square_grid).intersections(square)
         spatial_index.query.assert_called()
 
 
@@ -75,3 +74,4 @@ def test_covered_by_method_returns_empty_when_not_covered_by_any(
 ):
     indexed = IndexedGeometries(four_square_grid)
     covered = indexed.covered_by(square)
+    assert len(covered) == 0
