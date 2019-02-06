@@ -1,5 +1,5 @@
-import geopandas
 import pandas
+import shapely.geometry
 from shapely.prepared import prep
 from shapely.strtree import STRtree
 
@@ -10,9 +10,6 @@ def get_geometries(geometries):
 
 class Refinement:
     def __init__(self, geometries):
-        """
-        :geometries: GeoSeries or GeoDataFrame of Polygons
-        """
         self.geometries = get_geometries(geometries)
         for i, geometry in self.geometries.items():
             geometry.index = i
@@ -28,10 +25,10 @@ class Refinement:
         intersections = relevant_geometries.intersection(geometry)
         return intersections[intersections.area > 0]
 
-    def contained_in(self, container):
-        # prepared_container = prep(container)
+    def covered_by(self, container):
         relevant_geometries = self.query(container)
-        return relevant_geometries[relevant_geometries.apply(container.contains)]
+        prepared_container = prep(container)
+        return relevant_geometries[relevant_geometries.apply(prepared_container.covers)]
 
 
 def assign(source, target):
@@ -40,8 +37,8 @@ def assign(source, target):
     refinement = Refinement(source_geometries)
 
     groups = [
-        refinement.contained_in(container).apply(lambda x: target_index)
+        refinement.covered_by(container).apply(lambda x: target_index)
         for target_index, container in target_geometries.items()
     ]
-    assignment = pandas.concat(groups)
+    assignment = pandas.concat(groups).reindex(source_geometries.index)
     return assignment

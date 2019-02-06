@@ -47,3 +47,8 @@ def squares_within_four_square_grid():
             Polygon([(1.25, 1.25), (1.25, 1.75), (1.75, 1.75), (1.75, 1.25)]),
         ]
     )
+
+
+@pytest.fixture
+def left_half_of_square_grid(four_square_grid):
+    return four_square_grid[four_square_grid["ID"].isin(["a", "b"])]

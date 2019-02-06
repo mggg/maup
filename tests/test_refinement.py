@@ -75,9 +75,9 @@ def test_can_be_created_from_a_geoseries(four_square_grid):
     assert refinement
 
 
-def test_contained_in_method_returns_empty_when_not_contained_in_any(
+def test_covered_by_method_returns_empty_when_not_covered_by_any(
     four_square_grid, square
 ):
     refinement = Refinement(four_square_grid)
-    contained_in = refinement.contained_in(square)
-    assert len(contained_in) == 0
+    covered = refinement.covered_by(square)
+
