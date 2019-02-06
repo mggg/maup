@@ -2,9 +2,7 @@ import pandas
 from numpy import nan
 
 from spatial_ops import assign
-from spatial_ops.assign import (assign_by_area,
-                                assign_by_area_with_non_integer_indices,
-                                assign_without_area)
+from spatial_ops.assign import assign_by_area, assign_without_area
 
 
 def test_assign_assigns_geometries_when_they_nest_neatly(
@@ -87,7 +85,7 @@ class TestAssignByArea:
         # targets = four_square_grid
         # sources = squares_df.set_index("ID")
         sources = squares_df
-        assignment = assign_by_area_with_non_integer_indices(sources, targets)
+        assignment = assign_by_area(sources, targets)
         expected = assign_without_area(sources, targets)
         assert (expected == assignment).all()
 
@@ -96,7 +94,7 @@ class TestAssignByArea:
     ):
         targets = four_square_grid
         sources = squares_df.set_index("ID")
-        assignment = assign_by_area_with_non_integer_indices(sources, targets)
+        assignment = assign_by_area(sources, targets)
         expected = assign_without_area(sources, targets)
         assert (expected == assignment).all()
 
@@ -105,7 +103,7 @@ class TestAssignByArea:
     ):
         targets = four_square_grid.set_index("ID")
         sources = squares_df.set_index("ID")
-        assignment = assign_by_area_with_non_integer_indices(sources, targets)
+        assignment = assign_by_area(sources, targets)
         expected = assign_without_area(sources, targets)
         assert (expected == assignment).all()
 

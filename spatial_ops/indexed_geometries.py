@@ -39,8 +39,8 @@ class IndexedGeometries:
         assignment = pandas.concat(groups).reindex(self.index)
         return assignment
 
-    def iter_intersections(self, targets):
+    def enumerate_intersections(self, targets):
         target_geometries = get_geometries(targets)
-        for j, target in target_geometries.items():
-            for i, intersection in self.intersections(target).items():
+        for i, target in target_geometries.items():
+            for j, intersection in self.intersections(target).items():
                 yield i, j, intersection
