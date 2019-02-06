@@ -1,6 +1,5 @@
 import geopandas
 import numpy
-import pandas
 import pytest
 
 from spatial_ops import intersection_matrix

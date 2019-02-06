@@ -25,7 +25,7 @@ def test_indexed_has_a_spatial_index(four_square_grid):
 def test_indexed_queries_its_spatial_index_when_intersections_is_called(
     four_square_grid, square
 ):
-    with patch("spatial_ops.STRtree") as SpatialIndex:
+    with patch("spatial_ops.indexed_geometries.STRtree") as SpatialIndex:
         spatial_index = SpatialIndex.return_value
         indexed = IndexedGeometries(four_square_grid)
         overlaps = indexed.intersections(square)

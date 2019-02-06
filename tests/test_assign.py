@@ -1,15 +1,16 @@
 import pandas
 from numpy import nan
 
-from spatial_ops import (assign, assign_by_area,
-                         assign_by_area_with_non_integer_indices,
-                         assign_without_area)
+from spatial_ops import assign
+from spatial_ops.assign import (assign_by_area,
+                                assign_by_area_with_non_integer_indices,
+                                assign_without_area)
 
 
 def test_assign_assigns_geometries_when_they_nest_neatly(
     four_square_grid, squares_within_four_square_grid
 ):
-    
+
     result = assign_without_area(squares_within_four_square_grid, four_square_grid)
     assert len(list(result)) == len(squares_within_four_square_grid)
 
@@ -126,8 +127,14 @@ class TestAssignByArea:
         assert (expected == assignment).all()
 
 
-def test_assign_dispatches_to_without_area_and_with_area(four_square_grid, squares_some_neat_some_overlapping):
-    assignment = assign(squares_some_neat_some_overlapping, four_square_grid.set_index("ID"))
-    expected = pandas.Series(["a", "a", "b", "d", "b"], index=squares_some_neat_some_overlapping.index)
+def test_assign_dispatches_to_without_area_and_with_area(
+    four_square_grid, squares_some_neat_some_overlapping
+):
+    assignment = assign(
+        squares_some_neat_some_overlapping, four_square_grid.set_index("ID")
+    )
+    expected = pandas.Series(
+        ["a", "a", "b", "d", "b"], index=squares_some_neat_some_overlapping.index
+    )
 
     assert (expected == assignment).all()
