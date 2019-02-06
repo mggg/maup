@@ -2,7 +2,8 @@ import geopandas
 import numpy
 import pytest
 
-from spatial_ops import IntersectionMatrix, intersection_matrix
+from spatial_ops import IntersectionMatrix
+from spatial_ops.intersection_matrix import intersection_matrix
 
 
 def test_intersection_matrix_returns_expected_matrix(four_square_grid, square):
@@ -115,7 +116,7 @@ def test_can_tell_whether_it_is_a_transport_matrix():
     assert matrix.preserves_mass()
 
 
-def test_must_normalize_area_to_be_a_transport_matrix(four_square_grid, big_square):
+def test_must_normalize_area_to_preserve_mass(four_square_grid, big_square):
     matrix = IntersectionMatrix.from_geometries(
         four_square_grid, big_square, lambda x, i, j: x.area / big_square.iloc[i].area
     )
