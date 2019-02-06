@@ -57,5 +57,14 @@ def left_half_of_square_grid(four_square_grid):
 @pytest.fixture
 def squares_df(squares_within_four_square_grid):
     return gp.GeoDataFrame(
-        {"geometry": squares_within_four_square_grid, "data": [1, 1, 1, 1]}
+        {
+            "geometry": squares_within_four_square_grid,
+            "data": [1, 1, 1, 1],
+            "ID": ["01", "02", "03", "04"],
+        }
     )
+
+
+@pytest.fixture
+def square_mostly_in_top_left():
+    return gp.GeoSeries([Polygon([(1.5, 0.5), (1.5, 2), (0, 2), (0, 0.5)])])
