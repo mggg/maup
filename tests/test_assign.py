@@ -1,5 +1,5 @@
+import pandas
 from numpy import nan
-from pandas import MultiIndex
 
 from spatial_ops import assign
 
@@ -48,3 +48,23 @@ def test_assigns_na_to_geometries_not_fitting_into_any_others(
     )
 
     assert result == {(0, "a"), (1, "a"), (2, "b"), (3, nan)}
+
+
+def test_assign_can_be_used_with_groupby(four_square_grid, squares_df):
+    assignment = assign(squares_df, four_square_grid.set_index("ID"))
+
+    result = squares_df.groupby(assignment)
+
+    assert set(result.groups.keys()) == {"a", "b", "d"}
+    assert set(result.indices["a"]) == {0, 1}
+    assert set(result.indices["b"]) == {2}
+    assert set(result.indices["d"]) == {3}
+
+
+def test_assign_can_be_used_with_groupby_and_aggregate(four_square_grid, squares_df):
+    assignment = assign(squares_df, four_square_grid.set_index("ID"))
+
+    result = squares_df.groupby(assignment)["data"].sum()
+
+    expected = pandas.Series([2, 1, 1], index=["a", "b", "d"])
+    assert (expected == result).all()

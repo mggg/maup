@@ -52,3 +52,10 @@ def squares_within_four_square_grid():
 @pytest.fixture
 def left_half_of_square_grid(four_square_grid):
     return four_square_grid[four_square_grid["ID"].isin(["a", "b"])]
+
+
+@pytest.fixture
+def squares_df(squares_within_four_square_grid):
+    return gp.GeoDataFrame(
+        {"geometry": squares_within_four_square_grid, "data": [1, 1, 1, 1]}
+    )
