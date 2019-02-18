@@ -11,7 +11,7 @@ from spatial_ops.geometry_array import GeometryArray, GeometryDtype
 @pytest.fixture
 def dtype():
     """A fixture providing the ExtensionDtype to validate."""
-    return GeometryDtype
+    return GeometryDtype()
 
 
 @pytest.fixture

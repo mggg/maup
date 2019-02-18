@@ -8,6 +8,10 @@ class TestConstructors(base.BaseConstructorsTests):
     pass
 
 
+class TestDtype(base.BaseDtypeTests):
+    pass
+
+
 def test_raises_if_passed_non_geometrydtype(data):
     with pytest.raises(TypeError):
         GeometryArray._from_sequence(data, dtype=int)

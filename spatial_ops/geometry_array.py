@@ -26,8 +26,8 @@ class GeometryDtype(ExtensionDtype):
 
 
 class GeometryArray(ExtensionArray):
-    def __init__(self, geometries):
-        self.geometries = np.array(geometries)
+    def __init__(self, geometries, copy=False):
+        self.geometries = np.array(geometries, copy=copy)
 
     def __iter__(self):
         return iter(self.geometries)
@@ -41,6 +41,11 @@ class GeometryArray(ExtensionArray):
     def isna(self):
         return pd.array([geom.is_empty for geom in self.geometries], dtype=np.bool)
 
+    def astype(self, dtype, copy=True):
+        if isinstance(dtype, GeometryDtype):
+            return self.__class__(self.geometries, copy=copy)
+        return super().astype(dtype, copy=copy)
+
     @property
     def dtype(self):
         return GeometryDtype()
@@ -49,4 +54,4 @@ class GeometryArray(ExtensionArray):
     def _from_sequence(cls, scalars, dtype=None, copy=False):
         if dtype is not None and not isinstance(dtype, GeometryDtype):
             raise TypeError("GeometryArray is only compatible with GeometryDtype.")
-        return cls(scalars)
+        return cls(scalars, copy=copy)
