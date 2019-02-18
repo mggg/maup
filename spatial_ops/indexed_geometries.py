@@ -30,8 +30,8 @@ class IndexedGeometries:
         prepared_container = prep(container)
         return relevant_geometries[relevant_geometries.apply(prepared_container.covers)]
 
-    def assign(self, target):
-        target_geometries = get_geometries(target)
+    def assign(self, targets):
+        target_geometries = get_geometries(targets)
         groups = [
             self.covered_by(container).apply(lambda x: container_index)
             for container_index, container in target_geometries.items()
