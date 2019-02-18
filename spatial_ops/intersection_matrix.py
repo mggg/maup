@@ -40,6 +40,10 @@ class IntersectionMatrix:
     def preserves_mass(self):
         return (np.sum(self.matrix, axis=1) == np.ones(len(self.sources_index))).all()
 
+    def normalize(self):
+        normalized_matrix = self.matrix / np.sum(self.matrix, axis=1)
+        return self.__class__(normalized_matrix, self.targets_index, self.sources_index)
+
     @classmethod
     def from_geometries(cls, sources, targets, weight_by):
         reindexed_sources = get_geometries_with_range_index(sources)

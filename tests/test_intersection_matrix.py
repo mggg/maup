@@ -104,7 +104,7 @@ def test_raises_error_when_interpolating_non_numerical_column():
         matrix.interpolate(["x", "y"])
 
 
-def test_can_tell_whether_it_is_a_transport_matrix():
+def test_can_tell_whether_it_preserves_mass():
     _matrix = numpy.matrix([[1, 1], [1, 0]])
     matrix = IntersectionMatrix(_matrix, sources_index=[1, 2], targets_index=["a", "b"])
 
@@ -122,3 +122,14 @@ def test_must_normalize_area_to_preserve_mass(four_square_grid, big_square):
     )
 
     assert matrix.preserves_mass()
+
+
+def test_can_normalize_so_that_it_preserves_mass():
+    _matrix = numpy.matrix([[1, 1], [1, 0]])
+    matrix = IntersectionMatrix(_matrix, sources_index=[1, 2], targets_index=["a", "b"])
+
+    assert not matrix.preserves_mass()
+
+    normalized = matrix.normalize()
+
+    assert normalized.preserves_mass()
