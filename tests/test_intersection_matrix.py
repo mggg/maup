@@ -190,6 +190,10 @@ class TestIntersections:
         result = intersections(sources, targets_with_str_index)
         they_match = result.index == expected.index
         assert they_match.all()
+    
+    def test_is_a_top_level_import(self):
+        from spatial_ops import intersections
+        assert intersections
 
 
 def manually_compute_intersections(sources, targets):
