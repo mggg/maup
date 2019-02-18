@@ -9,7 +9,3 @@ def get_geometries_with_range_index(geometries):
         pandas.RangeIndex(len(geometries))
     )
     return gdf.geometry
-
-
-def map_from_range_index(iterable):
-    return dict(zip(pandas.RangeIndex(len(iterable)), iterable))
