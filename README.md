@@ -24,7 +24,7 @@ package is distributed under the MIT License.
 Here are some basic situations where you might find `maup` helpful. For
 these examples, let's assume that you have some shapefiles with data at
 varying scales, and that you've used `geopandas.read_file` to read those
-shapefiles into the GeoDataFrames:
+shapefiles into three GeoDataFrames:
 
 -   `blocks`: Census blocks with demographic data.
 -   `precincts`: Precinct geometries with election data but no demographic data.
@@ -36,7 +36,9 @@ The `assign` function in `maup` takes two sets of geometries
 called `sources` and `targets` and returns a pandas `Series`. The Series maps each
 geometry in `sources` to the geometry in `targets` that covers it.
 (Here, geometry _A_ _covers_ geometry _B_ if every point of _A_ and its
-boundary lies in _B_ or its boundary.) :
+boundary lies in _B_ or its boundary.) If a source geometry is not covered by
+one single target geometry, it is assigned to the target geometry that covers
+the largest portion of its area.
 
 ```python
 from maup import assign
@@ -103,7 +105,13 @@ blocks[election_columns] = prorated
 #### Warning about areal interpolation
 
 **We strongly urge you _not_ to prorate by area!** The area of a census block is **not**
-a good predictor of its population. In fact, the implication goes in the other direction:
+a good predictor of its population. In fact, the correlation goes in the other direction:
 larger census blocks are _less_ populous than smaller ones.
 
 ## Modifiable areal unit problem
+
+The name of this package comes from the
+[modifiable areal unit problem (MAUP)](https://en.wikipedia.org/wiki/Modifiable_areal_unit_problem):
+the same spatial data will look different depending on how you divide up the space.
+Since `maup` is all about changing the way your data is aggregated and partitioned, we have named it
+after the MAUP to encourage that the toolkit be used thoughtfully and responsibly.
