@@ -1,9 +1,9 @@
 # maup
 
 [![Build
-Status](https://travis-ci.com/maxhully/spatial-ops.svg?branch=master)](https://travis-ci.com/maxhully/spatial-ops)
+Status](https://travis-ci.com/mggg/maup.svg?branch=master)](https://travis-ci.com/mggg/maup)
 [![Code
-Coverage](https://codecov.io/gh/maxhully/spatial-ops/branch/master/graph/badge.svg)](https://codecov.io/gh/maxhully/spatial-ops)
+Coverage](https://codecov.io/gh/mggg/maup/branch/master/graph/badge.svg)](https://codecov.io/gh/mggg/maup)
 
 `maup` is the geospatial toolkit for redistricting data. The package streamlines
 the basic workflows that arise when working with blocks, precincts, and districts,
