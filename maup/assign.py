@@ -1,6 +1,5 @@
-
 from .indexed_geometries import IndexedGeometries
-from .intersection_matrix import intersections
+from .intersections import intersections
 
 
 def assign(sources, targets):

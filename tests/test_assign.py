@@ -1,8 +1,8 @@
 import pandas
 from numpy import nan
 
-from spatial_ops import assign
-from spatial_ops.assign import assign_by_area, assign_by_covering
+from maup import assign
+from maup.assign import assign_by_area, assign_by_covering
 
 
 def test_assign_assigns_geometries_when_they_nest_neatly(

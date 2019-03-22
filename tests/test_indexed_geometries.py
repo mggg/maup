@@ -3,7 +3,7 @@ from unittest.mock import patch
 from geopandas import GeoSeries
 from shapely import wkt
 
-from spatial_ops import IndexedGeometries
+from maup import IndexedGeometries
 
 
 def test_indexed_can_be_created_from_a_dataframe(four_square_grid):
@@ -25,7 +25,7 @@ def test_indexed_has_a_spatial_index(four_square_grid):
 def test_indexed_queries_its_spatial_index_when_intersections_is_called(
     four_square_grid, square
 ):
-    with patch("spatial_ops.indexed_geometries.STRtree") as SpatialIndex:
+    with patch("maup.indexed_geometries.STRtree") as SpatialIndex:
         spatial_index = SpatialIndex.return_value
         IndexedGeometries(four_square_grid).intersections(square)
         spatial_index.query.assert_called()
