@@ -108,6 +108,39 @@ blocks[election_columns] = prorated
 a good predictor of its population. In fact, the correlation goes in the other direction:
 larger census blocks are _less_ populous than smaller ones.
 
+### Interpolating data between overlapping units
+
+Suppose you have a shapefile of precincts with some election results data
+and you want to join that data onto a different, more recent precincts shapefile.
+The two sets of precincts will have overlaps, and will not nest neatly like
+the blocks and precincts did in the above examples. (Not that blocks and
+precincts always nest neatly...)
+
+We can attempt to interpolate from the old precincts to the new precincts
+using the `intersections` function in `maup`. It
+
+We can use `intersections` to break the two sets of precincts into pieces
+that nest neatly into both sets. Then we can prorate from the old precincts
+onto these pieces, and aggregate up from the pieces to the new precincts.
+We'll use our same `blocks` GeoDataFrame to estimate the populations of the
+pieces.
+
+```python
+from maup import intersections, interpolate, aggregate
+
+columns = ["SEND12", "SENR12"]
+
+pieces = intersections(sources=old_precincts, targets=new_precincts)
+pieces = pieces[pieces.area > 0]
+
+# Use blocks to estimate population of each piece
+new_precincts[columns] = interpolate(
+    pieces,
+    old_precincts[columns],
+    weight_by=aggregate(blocks, pieces, "TOT_POP")
+)
+```
+
 ## Modifiable areal unit problem
 
 The name of this package comes from the
