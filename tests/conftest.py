@@ -2,6 +2,13 @@ import geopandas as gp
 import pytest
 from shapely.geometry import Polygon
 
+CRS = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+
+
+@pytest.fixture
+def crs():
+    return CRS
+
 
 @pytest.fixture
 def four_square_grid():
@@ -9,8 +16,9 @@ def four_square_grid():
     b = Polygon([(0, 1), (0, 2), (1, 2), (1, 1)])
     c = Polygon([(1, 0), (1, 1), (2, 1), (2, 0)])
     d = Polygon([(1, 1), (1, 2), (2, 2), (2, 1)])
-    df = gp.GeoDataFrame({"ID": ["a", "b", "c", "d"], "geometry": [a, b, c, d]})
-    df.crs = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+    df = gp.GeoDataFrame(
+        {"ID": ["a", "b", "c", "d"], "geometry": [a, b, c, d]}, crs=CRS
+    )
     return df
 
 
@@ -45,7 +53,8 @@ def squares_within_four_square_grid():
             Polygon([(0, 1), (0, 2), (1, 2), (1, 1)]),
             # fits neatly inside d:
             Polygon([(1.25, 1.25), (1.25, 1.75), (1.75, 1.75), (1.75, 1.25)]),
-        ]
+        ],
+        crs=CRS,
     )
 
 
@@ -61,24 +70,27 @@ def squares_df(squares_within_four_square_grid):
             "geometry": squares_within_four_square_grid,
             "data": [1, 1, 1, 1],
             "ID": ["01", "02", "03", "04"],
-        }
+        },
+        crs=CRS,
     )
 
 
 @pytest.fixture
 def square_mostly_in_top_left():
-    return gp.GeoSeries([Polygon([(1.5, 0.5), (1.5, 2), (0, 2), (0, 0.5)])])
+    return gp.GeoSeries([Polygon([(1.5, 0.5), (1.5, 2), (0, 2), (0, 0.5)])], crs=CRS)
 
 
 @pytest.fixture
 def squares_some_neat_some_overlapping(
     square_mostly_in_top_left, squares_within_four_square_grid
 ):
-    return squares_within_four_square_grid.append(
+    result = squares_within_four_square_grid.append(
         square_mostly_in_top_left, ignore_index=True
     )
+    result.crs = CRS
+    return result
 
 
 @pytest.fixture
 def big_square():
-    return gp.GeoSeries([Polygon([(0, 0), (2, 0), (2, 2), (0, 2)])])
+    return gp.GeoSeries([Polygon([(0, 0), (2, 0), (2, 2), (0, 2)])], crs=CRS)

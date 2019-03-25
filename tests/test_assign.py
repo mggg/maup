@@ -76,8 +76,6 @@ class TestAssignByArea:
     def test_gives_same_answer_for_integer_indices(self, four_square_grid, squares_df):
         assignment = assign_by_area(squares_df, four_square_grid)
         expected = assign_by_covering(squares_df, four_square_grid)
-        print(assignment)
-        print(expected)
         assert (expected == assignment).all()
 
     def test_gives_same_answer_for_targets_with_non_integer_index(
@@ -128,11 +126,12 @@ class TestAssignByArea:
 
 
 def test_assign_dispatches_to_without_area_and_with_area(
-    four_square_grid, squares_some_neat_some_overlapping
+    four_square_grid, squares_some_neat_some_overlapping, crs
 ):
-    assignment = assign(
-        squares_some_neat_some_overlapping, four_square_grid.set_index("ID")
-    )
+    other = four_square_grid.set_index("ID")
+    other.crs = crs
+    print(squares_some_neat_some_overlapping.crs, other.crs)
+    assignment = assign(squares_some_neat_some_overlapping, other)
     expected = pandas.Series(
         ["a", "a", "b", "d", "b"], index=squares_some_neat_some_overlapping.index
     )

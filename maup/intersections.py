@@ -3,8 +3,10 @@ import numpy
 
 from .indexed_geometries import IndexedGeometries
 from .indices import get_geometries_with_range_index
+from .crs import require_same_crs
 
 
+@require_same_crs
 def intersections(sources, targets):
     """Computes all of the nonempty intersections between two sets of geometries.
     The returned `~geopandas.GeoSeries` will have a MultiIndex, where the geometry
