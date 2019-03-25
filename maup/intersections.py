@@ -56,20 +56,20 @@ def prorate(inters, data, weights, aggregate_by=numpy.sum):
         ``inters`` to ``targets``. The default is :func:`numpy.sum`.
     """
     inters = inters[inters.area > 0]
-
-    return_series = False
-    if isinstance(data, pandas.DataFrame):
-        df = data
-    elif isinstance(data, pandas.Series):
-        df = pandas.DataFrame({"data": data})
-        return_series = True
-
     source_assignment = inters.index.get_level_values("source")
-    disagreggated = pandas.DataFrame(
-        {column: source_assignment.map(df[column]) * weights for column in df.columns}
-    )
+
+    if isinstance(data, pandas.DataFrame):
+        disagreggated = pandas.DataFrame(
+            {
+                column: source_assignment.map(data[column]) * weights
+                for column in data.columns
+            }
+        )
+    elif isinstance(data, pandas.Series):
+        disagreggated = source_assignment.map(data) * weights
+    else:
+        raise TypeError("data must be a Series or DataFrame")
+
     aggregated = disagreggated.groupby(level="target").agg(aggregate_by)
 
-    if return_series:
-        return aggregated["data"]
     return aggregated

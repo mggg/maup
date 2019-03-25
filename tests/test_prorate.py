@@ -35,3 +35,9 @@ def test_prorate_dataframe(sources, targets):
 
     assert (prorated["data1"] == 10 * targets.area).all()
     assert (prorated["data2"] == 10 * targets.area).all()
+
+
+def test_prorate_raises_if_data_is_not_dataframe_or_series(sources, targets):
+    pieces = intersections(sources, targets)
+    with pytest.raises(TypeError):
+        prorate(pieces, "not a series", [])
