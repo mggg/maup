@@ -1,7 +1,9 @@
 from .indexed_geometries import IndexedGeometries
 from .intersections import intersections
+from .crs import require_same_crs
 
 
+@require_same_crs
 def assign(sources, targets):
     """Assign source geometries to targets. A source is assigned to the
     target that covers it, or, if no target covers the entire source, the

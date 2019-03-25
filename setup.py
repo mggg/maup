@@ -1,5 +1,7 @@
 from setuptools import find_packages, setup
 
+version = "0.3"
+
 with open("./README.md") as f:
     long_description = f.read()
 
@@ -7,7 +9,7 @@ requirements = ["numpy", "pandas", "geopandas", "shapely"]
 
 setup(
     name="maup",
-    version="0.2",
+    version=version,
     description="The geospatial toolkit for redistricting data",
     author="Max Hully",
     author_email="max@mggg.org",
