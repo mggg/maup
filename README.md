@@ -149,7 +149,7 @@ weights = blocks["TOTPOP"].groupby(assign(blocks, pieces)).sum()
 new_precincts[columns] = prorate(
     pieces,
     old_precincts[columns],
-    weight_by=weights
+    weights=weights
 )
 ```
 

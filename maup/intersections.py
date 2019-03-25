@@ -1,5 +1,6 @@
 from geopandas import GeoDataFrame
 import numpy
+import pandas
 
 from .indexed_geometries import IndexedGeometries
 from .indices import get_geometries_with_range_index
@@ -44,10 +45,10 @@ def prorate(inters, data, weights, aggregate_by=numpy.sum):
     :param inters: the :func:`~maup.intersections` of the geometries you are
         getting data from (sources) and the geometries you are moving the data
         to
-    :type data: :class:`geopandas.GeoSeries`
+    :type inters: :class:`geopandas.GeoSeries`
     :param data: the data you want to move (must be indexed the same as
         the source geometries)
-    :type data: :class:`pandas.Series`
+    :type data: :class:`pandas.Series` or :class:`pandas.DataFrame`
     :param weights: the weights to use when prorating from ``sources`` to
         ``inters``
     :type weights: :class:`pandas.Series`
@@ -55,6 +56,20 @@ def prorate(inters, data, weights, aggregate_by=numpy.sum):
         ``inters`` to ``targets``. The default is :func:`numpy.sum`.
     """
     inters = inters[inters.area > 0]
-    disagreggated = inters.index.get_level_values("source").map(data) * weights
+
+    return_series = False
+    if isinstance(data, pandas.DataFrame):
+        df = data
+    elif isinstance(data, pandas.Series):
+        df = pandas.DataFrame({"data": data})
+        return_series = True
+
+    source_assignment = inters.index.get_level_values("source")
+    disagreggated = pandas.DataFrame(
+        {column: source_assignment.map(df[column]) * weights for column in df.columns}
+    )
     aggregated = disagreggated.groupby(level="target").agg(aggregate_by)
+
+    if return_series:
+        return aggregated["data"]
     return aggregated
