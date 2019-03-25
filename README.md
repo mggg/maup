@@ -10,8 +10,9 @@ districts, such as
 
 -   [Assigning precincts to districts](#assigning-precincts-to-districts),
 -   [Aggregating block data to precincts](#aggregating-block-data-to-precincts),
+-   [Disaggregating data from precincts down to blocks](#disaggregating-data-from-precincts-down-to-blocks),
     and
--   [Disaggregating data from precincts down to blocks](#disaggregating-data-from-precincts-down-to-blocks).
+-   [Prorating data when units do not nest neatly](#prorating-data-when-units-do-not-nest-neatly).
 
 The project's priorities are to be efficient by using spatial indices whenever
 possible and to integrate well with the existing ecosystem around
