@@ -136,7 +136,7 @@ We'll use our same `blocks` GeoDataFrame to estimate the populations of the
 pieces for the purposes of proration.
 
 ```python
-from maup import intersections, prorate, aggregate
+from maup import intersections, prorate
 
 columns = ["SEND12", "SENR12"]
 
