@@ -1,23 +1,30 @@
 # maup
 
-[![Build
-Status](https://travis-ci.com/maxhully/spatial-ops.svg?branch=master)](https://travis-ci.com/maxhully/spatial-ops)
-[![Code
-Coverage](https://codecov.io/gh/maxhully/spatial-ops/branch/master/graph/badge.svg)](https://codecov.io/gh/maxhully/spatial-ops)
+[![Build Status](https://travis-ci.com/mggg/maup.svg?branch=master)](https://travis-ci.com/mggg/maup)
+[![Code Coverage](https://codecov.io/gh/mggg/maup/branch/master/graph/badge.svg)](https://codecov.io/gh/mggg/maup)
+[![PyPI Package](https://badge.fury.io/py/maup.svg)](https://https://pypi.org/project/gerrychain/)
 
 `maup` is the geospatial toolkit for redistricting data. The package streamlines
 the basic workflows that arise when working with blocks, precincts, and districts,
 such as
 
--   Assigning smaller geometries like blocks and precincts to districts
--   Aggregating data from smaller geometries to larger ones, and
--   Disaggregating data from larger geometries to smaller ones.
+-   [Assigning precincts to districts](#assigning-precincts-to-districts),
+-   [Aggregating block data to precincts](#aggregating-block-data-to-precincts), and
+-   [Disaggregating data from precincts down to blocks](#disaggregating-data-from-precincts-down-to-blocks).
 
 The project's priorities are to be efficient by using spatial
 indices whenever possible and to integrate well with the existing ecosystem
 around [pandas](https://pandas.pydata.org/), [geopandas](https://geopandas.org)
 and [shapely](https://shapely.readthedocs.io/en/latest/). The
 package is distributed under the MIT License.
+
+## Installation
+
+To install from PyPI, run `pip install maup` from your terminal.
+
+If you are using Anaconda, we recommend installing geopandas
+first by running `conda install -c conda-forge geopandas`
+and then running `pip install maup`.
 
 ## Examples
 
@@ -60,7 +67,7 @@ graph = Graph.from_geodataframe(precincts)
 legislative_districts = Partition(graph, assignment)
 ```
 
-### Aggregating block-level data to the precinct level
+### Aggregating block data to precincts
 
 If you want to aggregate columns called `"TOTPOP"`, `"NH_BLACK"`, and
 `"NH_WHITE"` from `blocks` up to `precincts`, you can run:

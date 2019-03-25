@@ -1,19 +1,19 @@
 from setuptools import find_packages, setup
 
-with open("./README.rst") as f:
+with open("./README.md") as f:
     long_description = f.read()
 
-requirements = ["numpy", "scipy", "pandas", "geopandas", "shapely"]
+requirements = ["numpy", "pandas", "geopandas", "shapely"]
 
 setup(
-    name="spatial-ops",
-    version="0.1",
-    description="Spatial data processing, especially for redistricting",
+    name="maup",
+    version="0.2",
+    description="The geospatial toolkit for redistricting data",
     author="Max Hully",
     author_email="max@mggg.org",
     long_description=long_description,
-    long_description_content_type="text/x-rst",
-    url="https://github.com/maxhully/spatial-ops",
+    long_description_content_type="text/markdown",
+    url="https://github.com/mggg/maup",
     packages=find_packages(exclude=("tests",)),
     install_requires=requirements,
     classifiers=[
