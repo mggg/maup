@@ -53,6 +53,10 @@ class TestIntersections:
 
         assert intersections
 
+    def test_can_use_area_cutoff(self, sources, targets):
+        result = intersections(sources, targets, area_cutoff=0)
+        assert (result.area > 0).all()
+
 
 def manually_compute_intersections(sources, targets):
     records = []

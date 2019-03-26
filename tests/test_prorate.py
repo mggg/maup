@@ -41,3 +41,10 @@ def test_prorate_raises_if_data_is_not_dataframe_or_series(sources, targets):
     pieces = intersections(sources, targets)
     with pytest.raises(TypeError):
         prorate(pieces, "not a series", [])
+
+
+def test_one_dimensional_intersections_dont_cause_error(sources):
+    pieces = intersections(sources, sources.iloc[:2])
+    weight_by = pieces.area / pieces.index.get_level_values("source").map(sources.area)
+    prorated = prorate(pieces, sources.area, weight_by)
+    assert (prorated == sources.iloc[:2].area).all()

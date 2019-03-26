@@ -8,7 +8,7 @@ from .crs import require_same_crs
 
 
 @require_same_crs
-def intersections(sources, targets):
+def intersections(sources, targets, area_cutoff=None):
     """Computes all of the nonempty intersections between two sets of geometries.
     The returned `~geopandas.GeoSeries` will have a MultiIndex, where the geometry
     at index *(i, j)* is the intersection of ``sources[i]`` and ``targets[j]``
@@ -19,6 +19,9 @@ def intersections(sources, targets):
     :param targets: geometries
     :type targets: :class:`~geopandas.GeoSeries` or :class:`~geopandas.GeoDataFrame`
     :rtype: :class:`~geopandas.GeoSeries`
+    :param area_cutoff: (optional) if provided, only return intersections with
+        area greater than ``area_cutoff``
+    :type area_cutoff: Number or None
     """
     reindexed_sources = get_geometries_with_range_index(sources)
     reindexed_targets = get_geometries_with_range_index(targets)
@@ -34,6 +37,10 @@ def intersections(sources, targets):
     df = GeoDataFrame.from_records(records, columns=["source", "target", "geometry"])
     geometries = df.set_index(["source", "target"]).geometry
     geometries.sort_index(inplace=True)
+
+    if area_cutoff is not None:
+        geometries = geometries[geometries.area > area_cutoff]
+
     return geometries
 
 
@@ -55,7 +62,6 @@ def prorate(inters, data, weights, aggregate_by=numpy.sum):
     :param function aggregate_by: (optional) the function to use for aggregating from
         ``inters`` to ``targets``. The default is :func:`numpy.sum`.
     """
-    inters = inters[inters.area > 0]
     source_assignment = inters.index.get_level_values("source")
 
     if isinstance(data, pandas.DataFrame):
