@@ -140,7 +140,10 @@ from maup import intersections, prorate
 
 columns = ["SEND12", "SENR12"]
 
-pieces = intersections(old_precincts, new_precincts)
+# Include area_cutoff=0 to ignore any intersections with no area,
+# like boundary intersections, which we do not want to include in
+# our proration.
+pieces = intersections(old_precincts, new_precincts, area_cutoff=0)
 
 # Weight by prorated population from blocks
 weights = blocks["TOTPOP"].groupby(assign(blocks, pieces)).sum()
