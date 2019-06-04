@@ -2,7 +2,7 @@ import pytest
 
 from shapely.geometry.base import BaseGeometry
 
-from maup.adjacencies import adjacencies, OverlapWarning
+from maup.adjacencies import adjacencies, OverlapWarning, IslandWarning
 
 
 class TestAdjacencies:
@@ -21,6 +21,10 @@ class TestAdjacencies:
     def test_warns_for_overlaps(self, squares_some_neat_some_overlapping):
         with pytest.warns(OverlapWarning):
             adjacencies(squares_some_neat_some_overlapping)
+
+    def test_warns_for_islands(self, four_square_grid):
+        with pytest.warns(IslandWarning):
+            adjacencies(four_square_grid.loc[[0, 3]])
 
     def test_returns_geometries(self, four_square_grid):
         adjs = adjacencies(four_square_grid)

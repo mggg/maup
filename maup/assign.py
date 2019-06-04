@@ -23,11 +23,11 @@ def assign_by_covering(sources, targets):
 
 
 def assign_by_area(sources, targets):
-    intersection_areas = intersections(sources, targets).area
-    assignment = (
-        intersection_areas.groupby(level="source").idxmax().apply(drop_source_label)
-    )
-    return assignment
+    return assign_to_max(intersections(sources, targets, area_cutoff=0).area)
+
+
+def assign_to_max(weights):
+    return weights.groupby(level="source").idxmax().apply(drop_source_label)
 
 
 def drop_source_label(index):
