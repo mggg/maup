@@ -14,7 +14,7 @@ def assign(sources, targets):
     assignments_by_area = assign_by_area(unassigned, targets)
 
     assignment.update(assignments_by_area)
-    return assignment
+    return assignment.astype(targets.index.dtype, errors="ignore")
 
 
 def assign_by_covering(sources, targets):

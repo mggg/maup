@@ -2,10 +2,10 @@ from geopandas import GeoSeries
 from shapely.geometry import MultiPolygon, Polygon
 from shapely.ops import unary_union
 
-from .indexed_geometries import get_geometries
 from .assign import assign_to_max
-from .intersections import intersections
 from .crs import require_same_crs
+from .indexed_geometries import get_geometries
+from .intersections import intersections
 
 
 def holes_of_union(geometries):

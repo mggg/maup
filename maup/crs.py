@@ -7,7 +7,9 @@ def require_same_crs(f):
         geoms1, geoms2, *rest = args
         assert (
             geoms1.crs == geoms2.crs
-        ), "The source and target geometries must have the same CRS."
+        ), "The source and target geometries must have the same CRS. {} {}".format(
+            geoms1.crs, geoms2.crs
+        )
         return f(*args, **kwargs)
 
     return wrapped

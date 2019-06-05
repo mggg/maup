@@ -1,10 +1,9 @@
-from geopandas import GeoDataFrame
-import numpy
 import pandas
+from geopandas import GeoDataFrame
 
+from .crs import require_same_crs
 from .indexed_geometries import IndexedGeometries
 from .indices import get_geometries_with_range_index
-from .crs import require_same_crs
 
 
 @require_same_crs
@@ -37,6 +36,7 @@ def intersections(sources, targets, area_cutoff=None):
     df = GeoDataFrame.from_records(records, columns=["source", "target", "geometry"])
     geometries = df.set_index(["source", "target"]).geometry
     geometries.sort_index(inplace=True)
+    geometries.crs = sources.crs
 
     if area_cutoff is not None:
         geometries = geometries[geometries.area > area_cutoff]
@@ -44,7 +44,7 @@ def intersections(sources, targets, area_cutoff=None):
     return geometries
 
 
-def prorate(inters, data, weights, aggregate_by=numpy.sum):
+def prorate(relationship, data, weights, aggregate_by="sum"):
     """
     Prorate data from one set of geometries to another, using their
     `~maup.intersections`.
@@ -60,9 +60,16 @@ def prorate(inters, data, weights, aggregate_by=numpy.sum):
         ``inters``
     :type weights: :class:`pandas.Series`
     :param function aggregate_by: (optional) the function to use for aggregating from
-        ``inters`` to ``targets``. The default is :func:`numpy.sum`.
+        ``inters`` to ``targets``. The default is ``"sum"``.
     """
-    source_assignment = inters.index.get_level_values("source")
+    if relationship.index.nlevels > 1:
+        source_assignment = relationship.index.get_level_values("source").to_series(
+            index=relationship.index
+        )
+    else:
+        source_assignment = relationship
+
+    weights = weights.reindex_like(relationship)
 
     if isinstance(data, pandas.DataFrame):
         disagreggated = pandas.DataFrame(
@@ -76,6 +83,9 @@ def prorate(inters, data, weights, aggregate_by=numpy.sum):
     else:
         raise TypeError("data must be a Series or DataFrame")
 
-    aggregated = disagreggated.groupby(level="target").agg(aggregate_by)
+    if isinstance(disagreggated.index, pandas.MultiIndex):
+        aggregated = disagreggated.groupby(level="target").agg(aggregate_by)
+    else:
+        aggregated = disagreggated
 
     return aggregated
