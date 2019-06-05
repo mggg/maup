@@ -9,7 +9,7 @@ install:
     - python setup.py install
 
 script:
-    - pytest --cov=maup tests/
+    - pytest --cov=maup tests/ --doctest-glob="*.md"
 
 # Push the results back to codecov
 after_success:

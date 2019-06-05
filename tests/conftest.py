@@ -1,6 +1,7 @@
 import geopandas as gp
 import pytest
 from shapely.geometry import Polygon
+import maup
 
 CRS = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
 

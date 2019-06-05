@@ -57,6 +57,12 @@ class TestIntersections:
         result = intersections(sources, targets, area_cutoff=0)
         assert (result.area > 0).all()
 
+    def test_sets_crs(self, sources, targets):
+        crs = sources.crs
+        assert crs
+        inters = intersections(sources, targets)
+        assert inters.crs == crs
+
 
 def manually_compute_intersections(sources, targets):
     records = []
