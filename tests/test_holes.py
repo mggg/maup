@@ -4,7 +4,14 @@ import geopandas
 import pytest
 from shapely.geometry import Point, Polygon
 
-from maup.repair import close_gaps, holes, holes_of_union, absorb_by_shared_perimeter
+from maup.repair import (
+    close_gaps,
+    holes,
+    holes_of_union,
+    absorb_by_shared_perimeter,
+    resolve_overlaps,
+    adjacencies,
+)
 
 
 def square_at(lower_left_corner, side_length=1):
@@ -151,3 +158,20 @@ class TestAbsorbBySharedPerimeters:
 
         with pytest.raises(IndexError):
             absorb_by_shared_perimeter(sources, targets)
+
+
+def test_overlaps_remove_overlaps():
+    # 00x11
+    # 00x11
+    # 00x11
+    square1 = square_at((0, 0), side_length=3)
+    square2 = square_at((2, 0), side_length=3)
+    geometries = geopandas.GeoSeries([square1, square2])
+    result = resolve_overlaps(geometries, relative_threshold=None)
+
+    inters = adjacencies(result)
+    assert not (inters.area > 0).any()
+
+
+def test_overlaps_returns_same_if_no_overlaps(four_square_grid):
+    assert resolve_overlaps(four_square_grid) is four_square_grid.geometry

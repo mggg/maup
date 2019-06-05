@@ -2,6 +2,7 @@ from geopandas import GeoSeries
 from shapely.geometry import MultiPolygon, Polygon
 from shapely.ops import unary_union
 
+from .adjacencies import adjacencies
 from .assign import assign_to_max
 from .crs import require_same_crs
 from .indexed_geometries import get_geometries
@@ -47,6 +48,20 @@ def close_gaps(geometries, relative_threshold=0.1):
     return absorb_by_shared_perimeter(
         gaps, geometries, relative_threshold=relative_threshold
     )
+
+
+def resolve_overlaps(geometries, relative_threshold=0.1):
+    geometries = get_geometries(geometries)
+    inters = adjacencies(geometries, warn_for_islands=False, warn_for_overlaps=False)
+    overlaps = inters[inters.area > 0]
+
+    if len(overlaps) == 0:
+        return geometries
+
+    # Remove overlaps arbitrarily
+    levels_to_drop = list(range(1, overlaps.index.nlevels))
+    to_remove = overlaps.droplevel(levels_to_drop)
+    return geometries.difference(to_remove)
 
 
 @require_same_crs
