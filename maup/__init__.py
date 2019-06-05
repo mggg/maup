@@ -4,7 +4,7 @@ from .indexed_geometries import IndexedGeometries
 from .intersections import intersections, prorate
 from .repair import close_gaps
 
-__version__ = "0.4"
+__version__ = "0.5"
 __all__ = [
     "assign",
     "IndexedGeometries",
