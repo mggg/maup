@@ -160,18 +160,73 @@ class TestAbsorbBySharedPerimeters:
             absorb_by_shared_perimeter(sources, targets)
 
 
-def test_overlaps_remove_overlaps():
-    # 00x11
-    # 00x11
-    # 00x11
-    square1 = square_at((0, 0), side_length=3)
-    square2 = square_at((2, 0), side_length=3)
-    geometries = geopandas.GeoSeries([square1, square2])
-    result = resolve_overlaps(geometries, relative_threshold=None)
+class TestResolveOverlaps:
+    def test_removes_overlaps(self):
+        # 00x11
+        # 00x11
+        # 00x11
+        square1 = square_at((0, 0), side_length=3)
+        square2 = square_at((2, 0), side_length=3)
+        geometries = geopandas.GeoSeries([square1, square2])
+        result = resolve_overlaps(geometries, relative_threshold=None)
 
-    inters = adjacencies(result)
-    assert not (inters.area > 0).any()
+        inters = adjacencies(result)
+        assert not (inters.area > 0).any()
 
+    def test_returns_same_if_no_overlaps(self, four_square_grid):
+        assert resolve_overlaps(four_square_grid) is four_square_grid.geometry
 
-def test_overlaps_returns_same_if_no_overlaps(four_square_grid):
-    assert resolve_overlaps(four_square_grid) is four_square_grid.geometry
+    def test_assigns_overlap_by_max_shared_perimeter(self):
+        """The overlapping area should be assigned to the polygon that shares
+        the most perimeter with the overlap.
+        """
+        # 000
+        # 00x1
+        # 00x1
+        square1 = square_at((0, 0), side_length=3)
+        square2 = square_at((2, 0), side_length=2)
+        geometries = geopandas.GeoSeries([square1, square2])
+        result = resolve_overlaps(geometries, relative_threshold=None)
+
+        # Expected:
+        # 000
+        # 0001
+        # 0001
+        assert result[0].equals(square1)
+        assert result[1].equals(Polygon([(3, 0), (3, 2), (4, 2), (4, 0)]))
+
+    def test_threshold(self):
+        # 000
+        # 00x1
+        # 00x1
+        square1 = square_at((0, 0), side_length=3)
+        square2 = square_at((2, 0), side_length=2)
+        geometries = geopandas.GeoSeries([square1, square2])
+        # This threshold is low enough that nothing should happen:
+        result = resolve_overlaps(geometries, relative_threshold=0.0001)
+
+        # Expected:
+        # 000
+        # 00x1
+        # 00x1
+        print(result)
+        assert result[0].equals(square1)
+        assert result[1].equals(square2)
+
+    def test_threshold_rules_out_one_but_not_both(self):
+        # 000
+        # 00x1
+        # 00x1
+        square1 = square_at((0, 0), side_length=3)
+        square2 = square_at((2, 0), side_length=2)
+        geometries = geopandas.GeoSeries([square1, square2])
+
+        # It's under threshold w.r.t square1 but not square 2
+        result = resolve_overlaps(geometries, relative_threshold=0.4)
+
+        # Expected:
+        # 000
+        # 00x1
+        # 00x1
+        assert result[0].equals(square1)
+        assert result[1].equals(square2)
