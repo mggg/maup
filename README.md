@@ -1,8 +1,8 @@
 # maup
 
-[![Build Status](https://travis-ci.com/mggg/maup.svg?branch=master)](https://travis-ci.com/mggg/maup)
-[![Code Coverage](https://codecov.io/gh/mggg/maup/branch/master/graph/badge.svg)](https://codecov.io/gh/mggg/maup)
-[![PyPI Package](https://badge.fury.io/py/maup.svg)](https://pypi.org/project/maup/)
+[![Build Status](https://travis-ci.com/mggg/maup.png?branch=master)](https://travis-ci.com/mggg/maup)
+[![Code Coverage](https://codecov.io/gh/mggg/maup/branch/master/graph/badge.png)](https://codecov.io/gh/mggg/maup)
+[![PyPI Package](https://badge.fury.io/py/maup.png)](https://pypi.org/project/maup/)
 
 `maup` is the geospatial toolkit for redistricting data. The package streamlines
 the basic workflows that arise when working with blocks, precincts, and
@@ -11,8 +11,9 @@ districts, such as
 -   [Assigning precincts to districts](#assigning-precincts-to-districts),
 -   [Aggregating block data to precincts](#aggregating-block-data-to-precincts),
 -   [Disaggregating data from precincts down to blocks](#disaggregating-data-from-precincts-down-to-blocks),
+-   [Prorating data when units do not nest neatly](#prorating-data-when-units-do-not-nest-neatly),
     and
--   [Prorating data when units do not nest neatly](#prorating-data-when-units-do-not-nest-neatly).
+-   [Fixing overlaps and gaps](#fixing-overlaps-and-gaps)
 
 The project's priorities are to be efficient by using spatial indices whenever
 possible and to integrate well with the existing ecosystem around
@@ -195,11 +196,86 @@ that the U.S. Census Bureau produced as part of their 2018 test run of for the
 
 ```
 
+### Fixing overlaps and gaps
+
+Precinct shapefiles are often created by stitching together collections of
+precinct geometries sourced from different counties or different years. As a
+result, the shapefile often has gaps or overlaps between precincts where the
+different sources disagree about the boundaries. These gaps and overlaps pose
+problems when you are interested in working with the adjacency graph of the
+precincts, and not just in mapping the precincts. This adjacency information is
+especially important when studying redistricting, because districts are almost
+always expected to be contiguous.
+
+`maup` provides functions for closing gaps and resolving overlaps in a
+collection of geometries. As an example, we'll apply both functions to these
+geometries, which have both an overlap and a gap:
+
+![Four polygons with a gap and some overlaps](./examples/plot.png)
+
+Usually the gaps and overlaps in real shapefiles are tiny and easy to miss, but
+this exaggerated example will help illustrate the functionality.
+
+First, we'll use `shapely` to create the polygons from scratch:
+
+```python
+>>> from shapely.geometry import Polygon
+>>> geometries = geopandas.GeoSeries([
+...     Polygon([(0, 0), (2, 0), (2, 1), (1, 1), (1, 2), (0, 2)]),
+...     Polygon([(2, 0), (4, 0), (4, 2), (2, 2)]),
+...     Polygon([(0, 2), (2, 2), (2, 4), (0, 4)]),
+...     Polygon([(2, 1), (4, 1), (4, 4), (2, 4)]),
+... ])
+
+```
+
+Now we'll close the gap:
+
+```python
+>>> without_gaps = maup.close_gaps(geometries)
+>>> without_gaps
+0    POLYGON ((0 0, 2 0, 2 1, 1 1, 1 2, 0 2, 0 0))
+1              POLYGON ((2 0, 4 0, 4 2, 2 2, 2 0))
+2              POLYGON ((0 2, 2 2, 2 4, 0 4, 0 2))
+3              POLYGON ((2 1, 4 1, 4 4, 2 4, 2 1))
+dtype: object
+
+```
+
+The `without_gaps` geometries look like this:
+
+![Four polygons with two overlapping](./examples/plot_without_gaps.png)
+
+And then resolve the overlaps:
+
+```python
+>>> without_overlaps_or_gaps = maup.resolve_overlaps(without_gaps)
+>>> without_overlaps_or_gaps
+0    POLYGON ((0 0, 2 0, 2 1, 1 1, 1 2, 0 2, 0 0))
+1              POLYGON ((2 0, 4 0, 4 2, 2 2, 2 0))
+2              POLYGON ((0 2, 2 2, 2 4, 0 4, 0 2))
+3              POLYGON ((2 1, 4 1, 4 4, 2 4, 2 1))
+dtype: object
+
+```
+
+The `without_overlaps_or_gaps` geometries look like this:
+
+![Four squares](./examples/plot_without_gaps_or_overlaps.png)
+
+Both of the functions `resolve_overlaps` and `close_gaps` accept a
+`relative_threshold` argument. This threshold controls how large of a gap or
+overlap the function will attempt to fix. The default value of
+`relative_threshold` is `0.1`, which means that the functions will leave alone
+any gap/overlap whose area is more than 10% of the area of the geometries that
+might absorb that gap/overlap. In the above example, we set
+`relative_threshold=None` to ensure that no gaps or overlaps were ignored.
+
 ## Modifiable areal unit problem
 
 The name of this package comes from the
 [modifiable areal unit problem (MAUP)](https://en.wikipedia.org/wiki/Modifiable_areal_unit_problem):
 the same spatial data will look different depending on how you divide up the
 space. Since `maup` is all about changing the way your data is aggregated and
-partitioned, we have named it after the MAUP to encourage that the toolkit be
-used thoughtfully and responsibly.
+partitioned, we have named it after the MAUP to encourage users to use the
+toolkit thoughtfully and responsibly.
