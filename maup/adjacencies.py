@@ -27,6 +27,12 @@ def iter_adjacencies(geometries):
 def adjacencies(
     geometries, adjacency_type="rook", *, warn_for_overlaps=True, warn_for_islands=True
 ):
+    """Returns adjacencies between geometries. The return type is a
+    `GeoSeries` with a `MultiIndex`, whose (i, j)th entry is the pairwise
+    intersection between geometry `i` and geometry `j`. We ensure that
+    `i < j` always holds, so that any adjacency is represented just once
+    in the series.
+    """
     if adjacency_type not in ["rook", "queen"]:
         raise ValueError('adjacency_type must be "rook" or "queen"')
 

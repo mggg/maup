@@ -47,11 +47,11 @@ def intersections(sources, targets, area_cutoff=None):
 def prorate(relationship, data, weights, aggregate_by="sum"):
     """
     Prorate data from one set of geometries to another, using their
-    `~maup.intersections`.
+    `~maup.intersections` or an assignment.
 
-    :param inters: the :func:`~maup.intersections` of the geometries you are
+    :param relationship: the :func:`~maup.intersections` of the geometries you are
         getting data from (sources) and the geometries you are moving the data
-        to
+        to; or, a series assigning sources to targets
     :type inters: :class:`geopandas.GeoSeries`
     :param data: the data you want to move (must be indexed the same as
         the source geometries)
