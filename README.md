@@ -1,8 +1,9 @@
 # maup
 
-[![Build Status](https://travis-ci.com/mggg/maup.png?branch=master)](https://travis-ci.com/mggg/maup)
-[![Code Coverage](https://codecov.io/gh/mggg/maup/branch/master/graph/badge.png)](https://codecov.io/gh/mggg/maup)
-[![PyPI Package](https://badge.fury.io/py/maup.png)](https://pypi.org/project/maup/)
+[![Build Status](https://api.travis-ci.com/mggg/maup.svg?branch=master)](https://travis-ci.com/mggg/maup)
+[![codecov](https://codecov.io/gh/mggg/maup/branch/master/graph/badge.svg)](https://codecov.io/gh/mggg/maup)
+[![PyPI](https://img.shields.io/pypi/v/maup.svg?color=%23)](https://pypi.org/project/maup/)
+[![conda-forge Package](https://img.shields.io/conda/vn/conda-forge/maup.svg?color=%230099cd)](https://anaconda.org/conda-forge/maup)
 
 `maup` is the geospatial toolkit for redistricting data. The package streamlines
 the basic workflows that arise when working with blocks, precincts, and
@@ -23,10 +24,20 @@ under the MIT License.
 
 ## Installation
 
-To install from PyPI, run `pip install maup` from your terminal.
+We recommend installing `maup` from [conda-forge](https://conda-forge.org/)
+using [conda](https://docs.conda.io/en/latest/):
 
-If you are using Anaconda, we recommend installing geopandas first by running
-`conda install -c conda-forge geopandas` and then running `pip install maup`.
+```console
+conda install -c conda-forge maup
+```
+
+You can get conda by installing
+[Miniconda](https://docs.conda.io/en/latest/miniconda.html), a free Python
+distribution made especially for data science and scientific computing. You
+might also consider [Anaconda](https://www.anaconda.com/distribution/), which
+includes many data science packages that you might find useful.
+
+To install `maup` from PyPI, run `pip install maup` from your terminal.
 
 ## Examples
 

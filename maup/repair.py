@@ -89,7 +89,9 @@ def resolve_overlaps(geometries, relative_threshold=0.1):
     if len(overlaps) == 0:
         return geometries
 
-    to_remove = pandas.concat([overlaps.droplevel(1), overlaps.droplevel(0)])
+    to_remove = GeoSeries(
+        pandas.concat([overlaps.droplevel(1), overlaps.droplevel(0)]), crs=overlaps.crs
+    )
     with_overlaps_removed = geometries.difference(to_remove)
 
     return absorb_by_shared_perimeter(
