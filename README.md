@@ -190,6 +190,9 @@ that the U.S. Census Bureau produced as part of their 2018 test run of for the
 >>>
 >>> # Weight by prorated population from blocks
 >>> weights = blocks["TOTPOP"].groupby(maup.assign(blocks, pieces)).sum()
+>>> # Normalize the weights so that votes are allocated according to their
+>>> # share of population in the old_precincts
+>>> weights = maup.normalize(weights, level=0)
 >>>
 >>> # Use blocks to estimate population of each piece
 >>> new_precincts[columns] = maup.prorate(
@@ -198,12 +201,12 @@ that the U.S. Census Bureau produced as part of their 2018 test run of for the
 ...     weights=weights
 ... )
 >>> new_precincts[columns].head()
-      SEN18D    SEN18R
-0  3033568.0  205734.0
-1  1171050.0   66465.0
-2    35502.0    6222.0
-3   120950.0    9896.0
-4   307008.0   24960.0
+   SEN18D  SEN18R
+0   752.0    51.0
+1   370.0    21.0
+2    97.0    17.0
+3   585.0    74.0
+4   246.0    20.0
 
 ```
 
