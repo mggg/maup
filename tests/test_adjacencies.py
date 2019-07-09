@@ -32,3 +32,9 @@ class TestAdjacencies:
 
         for geom in adjs:
             assert isinstance(geom, BaseGeometry)
+
+    def test_sets_crs(self, four_square_grid):
+        assert four_square_grid.crs
+
+        adjs = adjacencies(four_square_grid)
+        assert adjs.crs == four_square_grid.crs
