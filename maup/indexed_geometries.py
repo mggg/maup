@@ -1,6 +1,7 @@
 import pandas
 from shapely.prepared import prep
 from shapely.strtree import STRtree
+from .progress_bar import with_progress
 
 
 def get_geometries(geometries):
@@ -34,13 +35,17 @@ class IndexedGeometries:
         target_geometries = get_geometries(targets)
         groups = [
             self.covered_by(container).apply(lambda x: container_index)
-            for container_index, container in target_geometries.items()
+            for container_index, container in with_progress(
+                target_geometries.items(), len(target_geometries)
+            )
         ]
         assignment = pandas.concat(groups).reindex(self.index)
         return assignment
 
     def enumerate_intersections(self, targets):
         target_geometries = get_geometries(targets)
-        for i, target in target_geometries.items():
+        for i, target in with_progress(
+            target_geometries.items(), len(target_geometries)
+        ):
             for j, intersection in self.intersections(target).items():
                 yield i, j, intersection
