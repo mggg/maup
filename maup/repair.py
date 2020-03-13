@@ -77,7 +77,7 @@ def resolve_overlaps(geometries, relative_threshold=0.1):
     """
     geometries = get_geometries(geometries)
     inters = adjacencies(geometries, warn_for_islands=False, warn_for_overlaps=False)
-    overlaps = inters[inters.area > 0]
+    overlaps = inters[inters.area > 0].buffer(0)
 
     if relative_threshold is not None:
         left_areas, right_areas = split_by_level(geometries.area, overlaps.index)
@@ -114,7 +114,8 @@ def absorb_by_shared_perimeter(sources, targets, relative_threshold=None):
     if len(targets) == 0:
         raise IndexError("targets must be nonempty")
 
-    assignment = assign_to_max(intersections(sources, targets, area_cutoff=None).length)
+    inters = intersections(sources, targets, area_cutoff=None).buffer(0)
+    assignment = assign_to_max(inters.length)
 
     if relative_threshold is not None:
         under_threshold = (
@@ -123,8 +124,15 @@ def absorb_by_shared_perimeter(sources, targets, relative_threshold=None):
         assignment = assignment[under_threshold]
 
     sources_to_absorb = GeoSeries(
-        sources.groupby(assignment).apply(unary_union), crs=sources.crs
+        sources.groupby(assignment).apply(unary_union), crs=sources.crs,
     )
+
     result = targets.union(sources_to_absorb)
+
+    # The .union call only returns the targets who had a corresponding
+    # source to absorb. Now we fill in all of the unchanged targets.
+    result = result.reindex(targets.index)
+    did_not_absorb = result.isna() | result.is_empty
+    result.loc[did_not_absorb] = targets[did_not_absorb]
 
     return result

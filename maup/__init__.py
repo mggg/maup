@@ -4,6 +4,7 @@ from .indexed_geometries import IndexedGeometries
 from .intersections import intersections, prorate
 from .repair import close_gaps, resolve_overlaps
 from .normalize import normalize
+from .progress_bar import progress
 
 __version__ = "0.6"
 __all__ = [
@@ -15,4 +16,5 @@ __all__ = [
     "resolve_overlaps",
     "IndexedGeometries",
     "normalize",
+    "progress",
 ]
