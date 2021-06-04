@@ -99,13 +99,13 @@ def resolve_overlaps(geometries, relative_threshold=0.1):
         overlaps, with_overlaps_removed, relative_threshold=None
     )
 
-def autorepair(geometries):
+def autorepair(geometries, relative_threshold=0.1):
     """
     Applies all the tricks with default args
     """
     geometries["geometry"] = make_valid(geometries)
-    geometries["geometry"] = resolve_overlaps(geometries)
-    geometries["geometry"] = close_gaps(geometries)
+    geometries["geometry"] = resolve_overlaps(geometries, relative_threshold=relative_threshold)
+    geometries["geometry"] = close_gaps(geometries, relative_threshold=relative_threshold)
 
     return geometries["geometry"]
 
