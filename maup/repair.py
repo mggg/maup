@@ -3,6 +3,7 @@ import pandas
 from geopandas import GeoSeries
 from shapely.geometry import MultiPolygon, Polygon
 from shapely.ops import unary_union
+# from shapely.validation import make_valid # currently in alpha
 
 from .adjacencies import adjacencies
 from .assign import assign_to_max
@@ -98,6 +99,22 @@ def resolve_overlaps(geometries, relative_threshold=0.1):
         overlaps, with_overlaps_removed, relative_threshold=None
     )
 
+def autorepair(geometries):
+    """
+    Applies all the tricks with default args
+    """
+    geometries["geometry"] = make_valid(geometries)
+    geometries["geometry"] = resolve_overlaps(geometries)
+    geometries["geometry"] = close_gaps(geometries)
+
+    return geometries["geometry"]
+
+def make_valid(geometries):
+    """
+    Applies the shapely .buffer(0) and make_valid (once released) trick to all geometries.
+    """
+    return geometries["geometry"].buffer(0)
+    # return geometries["geometry"].buffer(0).apply(lambda x: make_valid(x))
 
 def split_by_level(series, multiindex):
     return tuple(
