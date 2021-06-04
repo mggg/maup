@@ -17,4 +17,6 @@ __all__ = [
     "IndexedGeometries",
     "normalize",
     "progress",
+    "make_valid",
+    "autorepair"
 ]
