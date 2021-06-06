@@ -282,14 +282,14 @@ The `without_overlaps_or_gaps` geometries look like this:
 
 ![Four squares](./examples/plot_without_gaps_or_overlaps.png)
 
-Alternatively, there is also a convenience `maup.autofix()` function provided that 
+Alternatively, there is also a convenience `maup.autorepair()` function provided that 
 attempts to resolve topological issues as well as close gaps and resolve overlaps:
 
 ```python
-without_overlaps_or_gaps = maup.autofix(geometries)
+without_overlaps_or_gaps = maup.autorepair(geometries)
 ```
 
-The functions `resolve_overlaps`, `close_gaps`, and `autofix` accept a
+The functions `resolve_overlaps`, `close_gaps`, and `autorepair` accept a
 `relative_threshold` argument. This threshold controls how large of a gap or
 overlap the function will attempt to fix. The default value of
 `relative_threshold` is `0.1`, which means that the functions will leave alone
