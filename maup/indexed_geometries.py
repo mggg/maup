@@ -13,12 +13,12 @@ class IndexedGeometries:
         self.geometries = get_geometries(geometries)
         geoms = list(self.geometries)
         for i, geometry in enumerate(geoms):
-            geometry.id = i
+            geometry.index = i
         self.spatial_index = STRtree(geoms)
         self.index = self.geometries.index
 
     def query(self, geometry):
-        relevant_indices = [geom.id for geom in self.spatial_index.query(geometry)]
+        relevant_indices = [geom.index for geom in self.spatial_index.query(geometry)]
         relevant_geometries = self.geometries.loc[relevant_indices]
         return relevant_geometries
 
