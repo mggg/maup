@@ -12,8 +12,8 @@ class IndexedGeometries:
     def __init__(self, geometries):
         self.geometries = get_geometries(geometries)
         geoms = list(self.geometries)
-        for i, geometry in enumerate(geoms):
-            geometry.index = i
+        for i, idx in enumerate(self.geometries.index):
+            geoms[i].index = idx
         self.spatial_index = STRtree(geoms)
         self.index = self.geometries.index
 
