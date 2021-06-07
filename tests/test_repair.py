@@ -21,6 +21,20 @@ def test_example_resolve_overlaps_repair_MI():
     shp["geometry"] = maup.resolve_overlaps(shp, relative_threshold=None)
     assert count_overlaps(shp) == 0
 
+def test_example_autorepair_MI():
+    shp = geopandas.read_file("zip://./examples/MI.zip") # MI shapefile
+
+    assert count_overlaps(shp) > 0
+    holes = maup.repair.holes_of_union(shp)
+    assert holes.unary_union.area > 100
+    assert len(holes) > 0
+
+    shp["geometry"] = maup.autorepair(shp, relative_threshold=None)
+
+    assert count_overlaps(shp) == 0
+    holes = maup.repair.holes_of_union(shp)
+    assert holes.unary_union.area < 1e-10
+
 def count_overlaps(shp):
     """
     Counts overlaps. Code is taken directly from the resolve_overlaps function in maup.
