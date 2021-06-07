@@ -54,7 +54,8 @@ def close_gaps(geometries, relative_threshold=0.1):
     area of the polygon, then the gap is left alone. The default value
     of `relative_threshold` is 0.1. This is intended to preserve intentional
     gaps while closing the tiny gaps that can occur as artifacts of
-    geospatial operations. Set `relative_threshold=None` to close all gaps.
+    geospatial operations. Set `relative_threshold=None` to attempt close all
+    gaps. Due to floating point precision issues, all gaps may not be closed.
     """
     geometries = get_geometries(geometries)
     gaps = holes_of_union(geometries)
@@ -73,7 +74,8 @@ def resolve_overlaps(geometries, relative_threshold=0.1):
     The default `relative_threshold` is `0.1`. This default is chosen to include
     tiny overlaps that can be safely auto-fixed while preserving major overlaps
     that might indicate deeper issues and should be handled on a case-by-case
-    basis. Set `relative_threshold=None` to resolve all overlaps.
+    basis. Set `relative_threshold=None` to attempt to resolve all overlaps. Due
+    to floating point precision issues, all overlaps may not be resolved.
     """
     geometries = get_geometries(geometries)
     inters = adjacencies(geometries, warn_for_islands=False, warn_for_overlaps=False)
@@ -92,7 +94,7 @@ def resolve_overlaps(geometries, relative_threshold=0.1):
     to_remove = GeoSeries(
         pandas.concat([overlaps.droplevel(1), overlaps.droplevel(0)]), crs=overlaps.crs
     )
-    with_overlaps_removed = geometries.difference(to_remove)
+    with_overlaps_removed = geometries.apply(lambda x: x.difference(unary_union(to_remove)))
 
     return absorb_by_shared_perimeter(
         overlaps, with_overlaps_removed, relative_threshold=None
