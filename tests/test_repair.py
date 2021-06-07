@@ -1,5 +1,6 @@
 import geopandas
 import maup
+import pytest
 
 # These tests are losely based off the test_example_case in test_prorate.py
 
@@ -34,6 +35,21 @@ def test_example_autorepair_MI():
     assert count_overlaps(shp) == 0
     holes = maup.repair.holes_of_union(shp)
     assert holes.unary_union.area < 1e-10
+
+def test_snap_shp_to_grid():
+    shp = geopandas.read_file("zip://./examples/MI.zip") # MI shapefile
+    assert maup.snap_to_grid(shp).all()
+
+# def test_snap_autorepair_MI():
+
+# def test_snap_shape_to_grid():
+
+# def test_snap_polygon_to_grid():
+
+def test_snap_shape_to_grid_type_error():
+    with pytest.raises(TypeError):
+        maup.repair.snap_shape_to_grid("not a Polygon object")
+
 
 def count_overlaps(shp):
     """

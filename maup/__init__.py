@@ -2,7 +2,7 @@ from .adjacencies import adjacencies
 from .assign import assign
 from .indexed_geometries import IndexedGeometries
 from .intersections import intersections, prorate
-from .repair import close_gaps, resolve_overlaps, make_valid, autorepair
+from .repair import close_gaps, resolve_overlaps, make_valid, autorepair, snap_to_grid
 from .normalize import normalize
 from .progress_bar import progress
 
@@ -14,6 +14,7 @@ __all__ = [
     "adjacencies",
     "close_gaps",
     "resolve_overlaps",
+    "snap_to_grid",
     "IndexedGeometries",
     "normalize",
     "progress",

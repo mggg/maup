@@ -113,10 +113,29 @@ def autorepair(geometries, relative_threshold=0.1):
 
 def make_valid(geometries):
     """
-    Applies the shapely .buffer(0) and make_valid (once released) trick to all geometries.
+    Applies the shapely .buffer(0) and make_valid (once released) trick to all
+    geometries. Should help resolve various topological issues in shapefiles.
     """
     return geometries["geometry"].buffer(0)
     # return geometries["geometry"].buffer(0).apply(lambda x: make_valid(x))
+
+def snap_to_grid(geometries, n=-7):
+    """
+    Snap the geometries to a grid by rounding to the nearest 10^n. Helps to
+    resolve floating point precision issues in shapefiles.
+    """
+    return geometries["geometry"].apply(lambda x: snap_shape_to_grid(x, n=n))
+
+def snap_shape_to_grid(shape, n=-7):
+    if isinstance(shape, Polygon):
+        return snap_polygon_to_grid(shape, n=n)
+    elif isinstance(shape, MultiPolygon):
+        return MultiPolygon([snap_polygon_to_grid(poly, n=n) for poly in shape.geoms])
+    else:
+        raise TypeError("Can only snap a Polygon or MultiPolygon to grid!")
+
+def snap_polygon_to_grid(polygon, n=-7):
+    return Polygon([(round(x, -n), round(y, -n)) for x, y in polygon.exterior.coords])
 
 def split_by_level(series, multiindex):
     return tuple(
