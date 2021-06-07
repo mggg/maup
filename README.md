@@ -236,6 +236,66 @@ set `maup.progress.enabled = True`:
 >>> pieces = maup.intersections(old_precincts, new_precincts, area_cutoff=0)
 
 ```
+### Fixing topological issues, overlaps, and gaps
+
+Precinct shapefiles are often created by stitching together collections of
+precinct geometries sourced from different counties or different years. As a
+result, the shapefile often has gaps or overlaps between precincts where the
+different sources disagree about the boundaries. These gaps and overlaps pose
+problems when you are interested in working with the adjacency graph of the
+precincts, and not just in mapping the precincts. This adjacency information is
+especially important when studying redistricting, because districts are almost
+always expected to be contiguous.
+
+`maup` provides functions for closing gaps and resolving overlaps in a
+collection of geometries. As an example, we'll apply both functions to these
+geometries, which have both an overlap and a gap:
+
+![Four polygons with a gap and some overlaps](./examples/plot.png)
+
+Usually the gaps and overlaps in real shapefiles are tiny and easy to miss, but
+this exaggerated example will help illustrate the functionality.
+
+First, we'll use `shapely` to create the polygons from scratch:
+
+```python
+from shapely.geometry import Polygon
+```
+
+Now we'll close the gap:
+
+```python
+without_gaps = maup.close_gaps(geometries)
+```
+
+The `without_gaps` geometries look like this:
+
+![Four polygons with two overlapping](./examples/plot_without_gaps.png)
+
+And then resolve the overlaps:
+
+```python
+without_overlaps_or_gaps = maup.resolve_overlaps(without_gaps)
+```
+
+The `without_overlaps_or_gaps` geometries look like this:
+
+![Four squares](./examples/plot_without_gaps_or_overlaps.png)
+
+Alternatively, there is also a convenience `maup.autorepair()` function provided that 
+attempts to resolve topological issues as well as close gaps and resolve overlaps:
+
+```python
+without_overlaps_or_gaps = maup.autorepair(geometries)
+```
+
+The functions `resolve_overlaps`, `close_gaps`, and `autorepair` accept a
+`relative_threshold` argument. This threshold controls how large of a gap or
+overlap the function will attempt to fix. The default value of
+`relative_threshold` is `0.1`, which means that the functions will leave alone
+any gap/overlap whose area is more than 10% of the area of the geometries that
+might absorb that gap/overlap. In the above example, we set
+`relative_threshold=None` to ensure that no gaps or overlaps were ignored.
 
 ## Modifiable areal unit problem
 
