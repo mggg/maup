@@ -41,15 +41,25 @@ def test_snap_shp_to_grid():
     assert maup.snap_to_grid(shp).all()
 
 # def test_snap_autorepair_MI():
+#     shp = geopandas.read_file("zip://./examples/MI.zip") # MI shapefile
+
+#     shp["geometry"] = maup.snap_to_grid(shp, 0)
+#     holes = maup.repair.holes_of_union(shp)
+#     assert len(holes) > 0
+#     assert holes.unary_union.area > 100
+#     shp["geometry"] = maup.close_gaps(shp, relative_threshold=None)
+#     shp["geometry"] = maup.snap_to_grid(shp, 0)
+
+#     assert len(maup.repair.holes_of_union(shp)) == 0
+#     assert maup.repair.holes_of_union(shp).unary_union.area == 0
 
 # def test_snap_shape_to_grid():
 
 # def test_snap_polygon_to_grid():
 
-def test_snap_shape_to_grid_type_error():
+def test_apply_func_error():
     with pytest.raises(TypeError):
-        maup.repair.snap_shape_to_grid("not a Polygon object")
-
+        maup.repair.apply_func_to_polygon_parts("not a Polygon object", lambda x: x)
 
 def count_overlaps(shp):
     """
