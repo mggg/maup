@@ -1,4 +1,5 @@
 import pandas
+import geopandas
 from shapely.prepared import prep
 from shapely.strtree import STRtree
 from .progress_bar import progress
@@ -30,16 +31,11 @@ class IndexedGeometries:
         relevant_geometries = self.query(container)
         prepared_container = prep(container)
 
-        # If `relevant_geometries` is empty, the try will fail
-        #     with an AttributeError.  In most cases this does not
-        #     occur, so it is better to try first than to test the length.
-        try:
-            return relevant_geometries[relevant_geometries.apply(prepared_container.covers)]
-        except AttributeError:
-            if len(relevant_geometries) == 0:
-                return pandas.Series([])
-            else:
-                raise        
+        if len(relevant_geometries) == 0:  # in case nothing is covered
+            return geopandas.GeoSeries()
+        else:
+            selected_geometries = relevant_geometries.apply(prepared_container.covers)
+            return relevant_geometries[selected_geometries]
 
     def assign(self, targets):
         target_geometries = get_geometries(targets)
