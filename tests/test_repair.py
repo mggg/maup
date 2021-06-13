@@ -34,7 +34,7 @@ def test_example_autorepair_MI():
 
     assert count_overlaps(shp) == 0
     holes = maup.repair.holes_of_union(shp)
-    assert holes.unary_union.area < 1e-10
+    assert holes.unary_union.area < 1e-10 # overlaps are not guaranteed to disappear 
 
 def test_snap_shp_to_grid():
     shp = geopandas.read_file("zip://./examples/MI.zip") # MI shapefile
@@ -46,11 +46,13 @@ def test_crop_to():
     new_precincts = geopandas.read_file("zip://./examples/new_precincts.zip")
     columns = ["SEN18D", "SEN18R"]
 
+    # Calculate without cropping
     pieces = maup.intersections(old_precincts, new_precincts, area_cutoff=0)
     weights = blocks["TOTPOP"].groupby(maup.assign(blocks, pieces)).sum()
     weights = maup.normalize(weights, level=0)
     new_precincts[columns] = maup.prorate(pieces, old_precincts[columns], weights=weights)
 
+    # Calculate with cropping
     old_precincts["geometries"] = maup.crop_to(old_precincts, new_precincts)
     new_precincts_cropped = new_precincts.copy()
     pieces = maup.intersections(old_precincts, new_precincts_cropped, area_cutoff=0)
@@ -58,12 +60,16 @@ def test_crop_to():
     weights = maup.normalize(weights, level=0)
     new_precincts_cropped[columns] = maup.prorate(pieces, old_precincts[columns], weights=weights)
 
-    diff_diff_sum = 0
+    diff_sum = 0
     for col in columns:
-        cropped_diff = abs(new_precincts_cropped[col].sum() - old_precincts[col].sum())
-        diff = abs(new_precincts[col].sum() - old_precincts[col].sum())
-        diff_diff_sum += diff - cropped_diff
-    assert diff_diff_sum >= 0
+        diff = new_precincts_cropped[col].sum() - new_precincts[col].sum()
+        assert diff >= 0
+
+        diff_sum += diff
+
+    # Ideally this would be strictly positive (which would mean less votes are lost after cropping)
+    # but crop_to doesn't resolve the missing votes errors yet.
+    assert diff_sum >= 0 
 
 # def test_snap_autorepair_MI():
 #     shp = geopandas.read_file("zip://./examples/MI.zip") # MI shapefile
