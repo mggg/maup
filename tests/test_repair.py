@@ -71,6 +71,7 @@ def test_crop_to():
     # but crop_to doesn't resolve the missing votes errors yet.
     assert diff_sum >= 0 
 
+# TODO: fix and add more tests
 # def test_snap_autorepair_MI():
 #     shp = geopandas.read_file("zip://./examples/MI.zip") # MI shapefile
 

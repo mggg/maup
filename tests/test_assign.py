@@ -148,4 +148,4 @@ def test_example_case():
     precincts[columns] = blocks[columns].groupby(assignment).sum()
     assert (precincts[columns] > 0).sum().sum() > len(precincts)
     for col in columns: # fails because it does not neatly cover
-        assert abs(precincts[col].sum() - blocks[col].sum())/blocks[col].sum() < 0.5
+        assert abs(precincts[col].sum() - blocks[col].sum()) / blocks[col].sum() < 0.5
