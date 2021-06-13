@@ -1,4 +1,5 @@
 import pandas
+import geopandas
 from shapely.prepared import prep
 from shapely.strtree import STRtree
 from .progress_bar import progress
@@ -29,7 +30,12 @@ class IndexedGeometries:
     def covered_by(self, container):
         relevant_geometries = self.query(container)
         prepared_container = prep(container)
-        return relevant_geometries[relevant_geometries.apply(prepared_container.covers)]
+
+        if len(relevant_geometries) == 0:  # in case nothing is covered
+            return geopandas.GeoSeries()
+        else:
+            selected_geometries = relevant_geometries.apply(prepared_container.covers)
+            return relevant_geometries[selected_geometries]
 
     def assign(self, targets):
         target_geometries = get_geometries(targets)
