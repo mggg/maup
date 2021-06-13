@@ -3,6 +3,7 @@ import warnings
 from geopandas import GeoSeries
 
 from .indexed_geometries import IndexedGeometries
+from .progress_bar import progress
 
 
 class OverlapWarning(UserWarning):
@@ -15,11 +16,11 @@ class IslandWarning(UserWarning):
 
 def iter_adjacencies(geometries):
     indexed = IndexedGeometries(geometries)
-    for i, geometry in indexed.geometries.items():
+    for i, geometry in progress(indexed.geometries.items(), len(indexed.geometries)):
         possible = indexed.query(geometry)
         possible = possible[possible.index > i]
         inters = possible.intersection(geometry)
-        inters = inters[-inters.is_empty]
+        inters = inters[-(inters.is_empty | inters.isna())]
         for j, inter in inters.items():
             yield (i, j), inter
 

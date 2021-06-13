@@ -210,7 +210,33 @@ that the U.S. Census Bureau produced as part of their 2018 test run of for the
 
 ```
 
-### Fixing overlaps and gaps
+### Progress bars
+
+For long-running operations, the user might want to see a progress bar to
+estimate how much longer a task will take (and whether to abandon it altogether).
+
+`maup` provides an optional progress bar for this purpose. To temporarily activate
+a progress bar for a certain operation, use `with maup.progress():`:
+
+```python
+>>> with maup.progress():
+...     assignment = maup.assign(precincts, districts)
+...
+
+```
+
+To turn on progress bars for all applicable operations (e.g. for an entire script),
+set `maup.progress.enabled = True`:
+
+```python
+>>> maup.progress.enabled = True
+>>> # Now a progress bar will display while this function runs:
+>>> assignment = maup.assign(precincts, districts)
+>>> # And this one too:
+>>> pieces = maup.intersections(old_precincts, new_precincts, area_cutoff=0)
+
+```
+### Fixing topological issues, overlaps, and gaps
 
 Precinct shapefiles are often created by stitching together collections of
 precinct geometries sourced from different counties or different years. As a
@@ -233,27 +259,13 @@ this exaggerated example will help illustrate the functionality.
 First, we'll use `shapely` to create the polygons from scratch:
 
 ```python
->>> from shapely.geometry import Polygon
->>> geometries = geopandas.GeoSeries([
-...     Polygon([(0, 0), (2, 0), (2, 1), (1, 1), (1, 2), (0, 2)]),
-...     Polygon([(2, 0), (4, 0), (4, 2), (2, 2)]),
-...     Polygon([(0, 2), (2, 2), (2, 4), (0, 4)]),
-...     Polygon([(2, 1), (4, 1), (4, 4), (2, 4)]),
-... ])
-
+from shapely.geometry import Polygon
 ```
 
 Now we'll close the gap:
 
 ```python
->>> without_gaps = maup.close_gaps(geometries)
->>> without_gaps
-0    POLYGON ((0 0, 2 0, 2 1, 1 1, 1 2, 0 2, 0 0))
-1              POLYGON ((2 0, 4 0, 4 2, 2 2, 2 0))
-2              POLYGON ((0 2, 2 2, 2 4, 0 4, 0 2))
-3              POLYGON ((2 1, 4 1, 4 4, 2 4, 2 1))
-dtype: object
-
+without_gaps = maup.close_gaps(geometries)
 ```
 
 The `without_gaps` geometries look like this:
@@ -263,21 +275,21 @@ The `without_gaps` geometries look like this:
 And then resolve the overlaps:
 
 ```python
->>> without_overlaps_or_gaps = maup.resolve_overlaps(without_gaps)
->>> without_overlaps_or_gaps
-0    POLYGON ((0 0, 2 0, 2 1, 1 1, 1 2, 0 2, 0 0))
-1              POLYGON ((2 0, 4 0, 4 2, 2 2, 2 0))
-2              POLYGON ((0 2, 2 2, 2 4, 0 4, 0 2))
-3              POLYGON ((2 1, 4 1, 4 4, 2 4, 2 1))
-dtype: object
-
+without_overlaps_or_gaps = maup.resolve_overlaps(without_gaps)
 ```
 
 The `without_overlaps_or_gaps` geometries look like this:
 
 ![Four squares](./examples/plot_without_gaps_or_overlaps.png)
 
-Both of the functions `resolve_overlaps` and `close_gaps` accept a
+Alternatively, there is also a convenience `maup.autorepair()` function provided that 
+attempts to resolve topological issues as well as close gaps and resolve overlaps:
+
+```python
+without_overlaps_or_gaps = maup.autorepair(geometries)
+```
+
+The functions `resolve_overlaps`, `close_gaps`, and `autorepair` accept a
 `relative_threshold` argument. This threshold controls how large of a gap or
 overlap the function will attempt to fix. The default value of
 `relative_threshold` is `0.1`, which means that the functions will leave alone

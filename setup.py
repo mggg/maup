@@ -5,7 +5,7 @@ version = "0.6"
 with open("./README.md") as f:
     long_description = f.read()
 
-requirements = ["numpy", "pandas", "geopandas", "shapely"]
+requirements = ["numpy", "pandas", "geopandas", "shapely", "tqdm"]
 
 setup(
     name="maup",
