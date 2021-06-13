@@ -81,7 +81,7 @@ def prorate(relationship, data, weights, aggregate_by="sum"):
     elif isinstance(data, pandas.Series):
         disagreggated = source_assignment.map(data) * weights
     else:
-        raise TypeError("data must be a Series or DataFrame")
+        raise TypeError("Data must be a Series or DataFrame")
 
     if isinstance(disagreggated.index, pandas.MultiIndex):
         aggregated = disagreggated.groupby(level="target").agg(aggregate_by)

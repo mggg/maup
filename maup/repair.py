@@ -1,8 +1,11 @@
 import pandas
+import functools
+import warnings
 
-from geopandas import GeoSeries
+from geopandas import GeoSeries, GeoDataFrame
 from shapely.geometry import MultiPolygon, Polygon
 from shapely.ops import unary_union
+# from shapely.validation import make_valid # currently in alpha
 
 from .adjacencies import adjacencies
 from .assign import assign_to_max
@@ -12,9 +15,12 @@ from .intersections import intersections
 
 
 """
-These functions are based on the functions in Mary Barker's
+Some of these functions are based on the functions in Mary Barker's
 check_shapefile_connectivity.py script in @gerrymandr/Preprocessing.
 """
+
+class AreaCroppingWarning(UserWarning):
+    pass
 
 
 def holes_of_union(geometries):
@@ -23,7 +29,7 @@ def holes_of_union(geometries):
     if not all(
         isinstance(geometry, (Polygon, MultiPolygon)) for geometry in geometries
     ):
-        raise TypeError("all geometries must be Polygons or MultiPolygons")
+        raise TypeError(f"Must be a Polygon or MultiPolygon (got types {set([type(x) for x in geometries])})!")
 
     union = unary_union(geometries)
     series = holes(union)
@@ -100,6 +106,86 @@ def resolve_overlaps(geometries, relative_threshold=0.1):
         overlaps, with_overlaps_removed, relative_threshold=None
     )
 
+def autorepair(geometries, relative_threshold=0.1):
+    """
+    Applies all the tricks in `maup.repair` with default args. Should work by default.
+    The default `relative_threshold` is `0.1`. This default is chosen to include
+    tiny overlaps that can be safely auto-fixed while preserving major overlaps
+    that might indicate deeper issues and should be handled on a case-by-case
+    basis. Set `relative_threshold=None` to attempt to resolve all overlaps. See
+    `resolve_overlaps()` and `close_gaps()` for more.
+    """
+    shp = geometries.copy()
+
+    shp["geometry"] = remove_repeated_vertices(shp)
+    shp["geometry"] = make_valid(shp)
+    shp["geometry"] = resolve_overlaps(shp, relative_threshold=relative_threshold)
+    shp["geometry"] = make_valid(shp)
+    shp["geometry"] = close_gaps(shp, relative_threshold=relative_threshold)
+    shp["geometry"] = make_valid(shp)
+
+    return shp["geometry"]
+
+def make_valid(geometries):
+    """
+    Applies the shapely .buffer(0) and make_valid (once released) trick to all
+    geometries. Should help resolve various topological issues in shapefiles.
+    """
+    return geometries["geometry"].simplify(0).buffer(0)
+    # return geometries["geometry"].buffer(0).apply(lambda x: make_valid(x))
+
+def remove_repeated_vertices(geometries):
+    """
+    Removes repeated vertices. Vertices are considered to be repeated if they
+    appear consecutively, excluding the start and end points.
+    """
+    return geometries["geometry"].apply(lambda x: apply_func_to_polygon_parts(x, dedup_vertices))
+
+def snap_to_grid(geometries, n=-7):
+    """
+    Snap the geometries to a grid by rounding to the nearest 10^n. Helps to
+    resolve floating point precision issues in shapefiles.
+    """
+    func = functools.partial(snap_polygon_to_grid, n=n)
+    return geometries["geometry"].apply(lambda x: apply_func_to_polygon_parts(x, func))
+
+def crop_to(source, target):
+    """
+    Crops the source geometries to the target geometries.
+    """
+    target_union = unary_union(get_geometries(target))
+    cropped_geometries = get_geometries(source).apply(lambda x: x.intersection(target_union))
+
+    if (cropped_geometries.area == 0).any():
+        warnings.warn("Some cropped geometries have zero area, likely due to\n",
+                      "large differences in the union of the geometries in your\n",
+                      "source and target shapefiles. This may become an issue\n",
+                      "when maupping.\n",
+                      AreaCroppingWarning
+        )
+
+    return cropped_geometries
+
+def apply_func_to_polygon_parts(shape, func):
+    if isinstance(shape, Polygon):
+        return func(shape)
+    elif isinstance(shape, MultiPolygon):
+        return MultiPolygon([func(poly) for poly in shape.geoms])
+    else:
+        raise TypeError(f"Can only apply {func} to a Polygon or MultiPolygon (got {shape} with type {type(shape)})!")
+
+def dedup_vertices(polygon):
+    deduped_vertices = []
+    for c, p in enumerate(list(polygon.exterior.coords)):
+        if c == 0:
+            deduped_vertices.append(p)
+        elif p != deduped_vertices[-1]:
+            deduped_vertices.append(p)
+
+    return Polygon(deduped_vertices)
+
+def snap_polygon_to_grid(polygon, n=-7):
+    return Polygon([(round(x, -n), round(y, -n)) for x, y in polygon.exterior.coords])
 
 def split_by_level(series, multiindex):
     return tuple(

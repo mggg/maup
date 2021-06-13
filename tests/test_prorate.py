@@ -2,7 +2,7 @@ import geopandas
 import pandas
 import pytest
 
-from maup import assign, intersections, prorate
+from maup import assign, intersections, prorate, normalize
 
 
 @pytest.fixture
@@ -84,9 +84,13 @@ def test_example_case():
     pieces = intersections(old_precincts, new_precincts, area_cutoff=0)
     # Weight by prorated population from blocks
     weights = blocks["TOTPOP"].groupby(assign(blocks, pieces)).sum()
+    weights = normalize(weights, level=0)
     # Use blocks to estimate population of each piece
     new_precincts[columns] = prorate(pieces, old_precincts[columns], weights=weights)
+
     assert (new_precincts[columns] > 0).sum().sum() > len(new_precincts) / 2
+    for col in columns:
+        assert abs(new_precincts[col].sum() - old_precincts[col].sum()) / old_precincts[col].sum() < 0.1
 
 
 def test_trivial_case(sources):
