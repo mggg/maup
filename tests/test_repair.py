@@ -40,6 +40,31 @@ def test_snap_shp_to_grid():
     shp = geopandas.read_file("zip://./examples/MI.zip") # MI shapefile
     assert maup.snap_to_grid(shp).all()
 
+def test_crop_to():
+    blocks = geopandas.read_file("zip://./examples/blocks.zip")
+    old_precincts = geopandas.read_file("zip://./examples/precincts.zip")
+    new_precincts = geopandas.read_file("zip://./examples/new_precincts.zip")
+    columns = ["SEN18D", "SEN18R"]
+
+    pieces = maup.intersections(old_precincts, new_precincts, area_cutoff=0)
+    weights = blocks["TOTPOP"].groupby(maup.assign(blocks, pieces)).sum()
+    weights = maup.normalize(weights, level=0)
+    new_precincts[columns] = maup.prorate(pieces, old_precincts[columns], weights=weights)
+
+    old_precincts["geometries"] = maup.crop_to(old_precincts, new_precincts)
+    new_precincts_cropped = new_precincts.copy()
+    pieces = maup.intersections(old_precincts, new_precincts_cropped, area_cutoff=0)
+    weights = blocks["TOTPOP"].groupby(maup.assign(blocks, pieces)).sum()
+    weights = maup.normalize(weights, level=0)
+    new_precincts_cropped[columns] = maup.prorate(pieces, old_precincts[columns], weights=weights)
+
+    diff_diff_sum = 0
+    for col in columns:
+        cropped_diff = abs(new_precincts_cropped[col].sum() - old_precincts[col].sum())
+        diff = abs(new_precincts[col].sum() - old_precincts[col].sum())
+        diff_diff_sum += diff - cropped_diff
+    assert diff_diff_sum >= 0
+
 # def test_snap_autorepair_MI():
 #     shp = geopandas.read_file("zip://./examples/MI.zip") # MI shapefile
 

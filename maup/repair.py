@@ -1,7 +1,8 @@
 import pandas
 import functools
+import warnings
 
-from geopandas import GeoSeries
+from geopandas import GeoSeries, GeoDataFrame
 from shapely.geometry import MultiPolygon, Polygon
 from shapely.ops import unary_union
 # from shapely.validation import make_valid # currently in alpha
@@ -14,9 +15,12 @@ from .intersections import intersections
 
 
 """
-These functions are based on the functions in Mary Barker's
+Some of these functions are based on the functions in Mary Barker's
 check_shapefile_connectivity.py script in @gerrymandr/Preprocessing.
 """
+
+class AreaCroppingWarning(UserWarning):
+    pass
 
 
 def holes_of_union(geometries):
@@ -104,21 +108,23 @@ def resolve_overlaps(geometries, relative_threshold=0.1):
 
 def autorepair(geometries, relative_threshold=0.1):
     """
-    Applies all the tricks in repair.py with default args. Should work by default.
+    Applies all the tricks in `maup.repair` with default args. Should work by default.
     The default `relative_threshold` is `0.1`. This default is chosen to include
     tiny overlaps that can be safely auto-fixed while preserving major overlaps
     that might indicate deeper issues and should be handled on a case-by-case
     basis. Set `relative_threshold=None` to attempt to resolve all overlaps. See
     `resolve_overlaps()` and `close_gaps()` for more.
     """
-    geometries["geometry"] = remove_repeated_vertices(geometries)
-    geometries["geometry"] = make_valid(geometries)
-    geometries["geometry"] = resolve_overlaps(geometries, relative_threshold=relative_threshold)
-    geometries["geometry"] = make_valid(geometries)
-    geometries["geometry"] = close_gaps(geometries, relative_threshold=relative_threshold)
-    geometries["geometry"] = make_valid(geometries)
+    shp = geometries.copy()
 
-    return geometries["geometry"]
+    shp["geometry"] = remove_repeated_vertices(shp)
+    shp["geometry"] = make_valid(shp)
+    shp["geometry"] = resolve_overlaps(shp, relative_threshold=relative_threshold)
+    shp["geometry"] = make_valid(shp)
+    shp["geometry"] = close_gaps(shp, relative_threshold=relative_threshold)
+    shp["geometry"] = make_valid(shp)
+
+    return shp["geometry"]
 
 def make_valid(geometries):
     """
@@ -142,6 +148,23 @@ def snap_to_grid(geometries, n=-7):
     """
     func = functools.partial(snap_polygon_to_grid, n=n)
     return geometries["geometry"].apply(lambda x: apply_func_to_polygon_parts(x, func))
+
+def crop_to(source, target):
+    """
+    Crops the source geometries to the target geometries.
+    """
+    target_union = unary_union(get_geometries(target))
+    cropped_geometries = get_geometries(source).apply(lambda x: x.intersection(target_union))
+
+    if (cropped_geometries.area == 0).any():
+        warnings.warn("Some cropped geometries have zero area, likely due to\n",
+                      "large differences in the union of the geometries in your\n",
+                      "source and target shapefiles. This may become an issue\n",
+                      "when maupping.\n",
+                      AreaCroppingWarning
+        )
+
+    return cropped_geometries
 
 def apply_func_to_polygon_parts(shape, func):
     if isinstance(shape, Polygon):
