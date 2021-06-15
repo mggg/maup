@@ -260,6 +260,12 @@ First, we'll use `shapely` to create the polygons from scratch:
 
 ```python
 from shapely.geometry import Polygon
+geometries = geopandas.GeoSeries([
+    Polygon([(0, 0), (2, 0), (2, 1), (1, 1), (1, 2), (0, 2)]),
+    Polygon([(2, 0), (4, 0), (4, 2), (2, 2)]),
+    Polygon([(0, 2), (2, 2), (2, 4), (0, 4)]),
+    Polygon([(2, 1), (4, 1), (4, 4), (2, 4)]),
+])
 ```
 
 Now we'll close the gap:
