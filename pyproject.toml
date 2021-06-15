@@ -3,6 +3,7 @@ name = "maup"
 version = "0.6"
 description = "The geospatial toolkit for redistricting data"
 authors = ["Max Hully <max@mggg.org>"]
+maintainers = ["Max Fan <root@max.fan>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
