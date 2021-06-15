@@ -1,4 +1,4 @@
-name: Python package
+name: maup tests
 
 on: [push, pull_request]
 
