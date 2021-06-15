@@ -1,6 +1,6 @@
 # maup
 
-[![Build Status](https://api.travis-ci.com/mggg/maup.svg?branch=master)](https://travis-ci.com/mggg/maup)
+[![maup tests](https://github.com/mggg/maup/actions/workflows/tests.yaml/badge.svg)](https://github.com/mggg/maup/actions/workflows/tests.yaml)
 [![codecov](https://codecov.io/gh/mggg/maup/branch/master/graph/badge.svg)](https://codecov.io/gh/mggg/maup)
 [![PyPI](https://img.shields.io/pypi/v/maup.svg?color=%23)](https://pypi.org/project/maup/)
 [![conda-forge Package](https://img.shields.io/conda/vn/conda-forge/maup.svg?color=%230099cd)](https://anaconda.org/conda-forge/maup)
