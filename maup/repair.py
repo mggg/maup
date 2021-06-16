@@ -166,6 +166,43 @@ def crop_to(source, target):
 
     return cropped_geometries
 
+def doctor(source, target=None):
+    """
+    Detects quality issues in a given set of source and target geometries. Quality
+    issues include overlaps, gaps, invalid geometries, repeated verticies, non-perfect
+    tiling, and not entirely overlapping source and targets. If `maup.doctor()` returns
+    `True`, votes should not be lost when prorating or assigning (beyond a few due to
+    rounding, etc.). Passing a target to doctor is optional.
+    """
+    shapefiles = [source]
+    source_union = unary_union(get_geometries(source))
+
+    if target:
+        shapefiles.append(target)
+
+        target_union = unary_union(get_geometries(source))
+        sym_area = target_union.symmetric_difference(target_union).area
+
+        assert sym_area == 0, "The unions of target and source differ!"
+
+    for shp in shapefiles:
+        overlaps = count_overlaps(shp)
+        holes = len(holes_of_union(shp))
+        assert overlaps == 0, "There are {overlaps} overlaps!"
+        assert holes == 0, "There are {holes} holes!"
+        assert shp.is_valid.all(), "There are some invalid geometries!"
+        apply_func_to_polygon_parts(lambda x: x)
+
+    return True
+
+def count_overlaps(shp):
+    """
+    Counts overlaps. Code is taken directly from the resolve_overlaps function in maup.
+    """
+    inters = adjacencies(shp["geometry"], warn_for_islands=False, warn_for_overlaps=False)
+    overlaps = inters[inters.area > 0].buffer(0)
+    return len(overlaps)
+
 def apply_func_to_polygon_parts(shape, func):
     if isinstance(shape, Polygon):
         return func(shape)
