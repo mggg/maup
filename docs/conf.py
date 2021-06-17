@@ -22,7 +22,7 @@ copyright = '2021, MGGG'
 author = 'Max Hully, Max Fan'
 
 # The full version, including alpha/beta/rc tags
-release = '0.6.0'
+release = '1.0.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -64,7 +64,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 #
 html_theme = "pydata_sphinx_theme"
 html_theme_options = {
-    "github_url": "https://github.com/numpy/numpydoc",
+    "github_url": "https://github.com/mggg/maup",
     "show_prev_next": False,
     "navbar_end": ["search-field.html", "navbar-icon-links.html"],
 }
