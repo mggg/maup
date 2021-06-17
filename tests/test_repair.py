@@ -1,5 +1,6 @@
 import geopandas
 import maup
+from maup.repair import count_overlaps
 import pytest
 
 # These tests are losely based off the test_example_case in test_prorate.py
@@ -25,6 +26,9 @@ def test_example_resolve_overlaps_repair_MI():
 def test_example_autorepair_MI():
     shp = geopandas.read_file("zip://./examples/MI.zip") # MI shapefile
 
+    with pytest.raises((TypeError, AssertionError)):
+        maup.doctor(shp)
+
     assert count_overlaps(shp) > 0
     holes = maup.repair.holes_of_union(shp)
     assert holes.unary_union.area > 100
@@ -34,7 +38,8 @@ def test_example_autorepair_MI():
 
     assert count_overlaps(shp) == 0
     holes = maup.repair.holes_of_union(shp)
-    assert holes.unary_union.area < 1e-10 # overlaps are not guaranteed to disappear 
+    assert holes.unary_union.area < 1e-10 # overlaps are not guaranteed to disappear
+    assert maup.doctor(shp)
 
 def test_snap_shp_to_grid():
     shp = geopandas.read_file("zip://./examples/MI.zip") # MI shapefile
@@ -93,10 +98,3 @@ def test_apply_func_error():
     with pytest.raises(TypeError):
         maup.repair.apply_func_to_polygon_parts("not a Polygon object", lambda x: x)
 
-def count_overlaps(shp):
-    """
-    Counts overlaps. Code is taken directly from the resolve_overlaps function in maup.
-    """
-    inters = maup.repair.adjacencies(shp["geometry"], warn_for_islands=False, warn_for_overlaps=False)
-    overlaps = inters[inters.area > 0].buffer(0)
-    return len(overlaps)

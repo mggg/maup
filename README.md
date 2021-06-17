@@ -14,7 +14,7 @@ districts, such as
 -   [Disaggregating data from precincts down to blocks](#disaggregating-data-from-precincts-down-to-blocks),
 -   [Prorating data when units do not nest neatly](#prorating-data-when-units-do-not-nest-neatly),
     and
--   [Fixing overlaps and gaps](#fixing-topological-issues-overlaps-and-gaps)
+-   [Fixing topological issues, overlaps, and gaps](#fixing-topological-issues-overlaps-and-gaps)
 
 The project's priorities are to be efficient by using spatial indices whenever
 possible and to integrate well with the existing ecosystem around
