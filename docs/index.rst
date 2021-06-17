@@ -24,7 +24,7 @@ Quick help:
 
 - `Example usage <https://github.com/mggg/maup#readme>`_
 - `Best practice guidelines <https://github.com/mggg/maup/blob/master/best-practices.md>`_ 
-- `API reference </reference/api/maup.html>`_ 
+- `API reference </en/latest/reference/api/maup/#module-maup>`_ 
 
 
 Installation
