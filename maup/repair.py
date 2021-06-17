@@ -186,7 +186,7 @@ def doctor(source, target=None):
         assert sym_area == 0, "The unions of target and source differ!"
 
     for shp in shapefiles:
-        assert shp["geometry"].apply(lambda x: isinstance((Polygon, MultiPolygon))).all(), "Some rows do not have geometries"
+        assert shp["geometry"].apply(lambda x: isinstance(x, (Polygon, MultiPolygon))).all(), "Some rows do not have geometries"
 
         overlaps = count_overlaps(shp)
         holes = len(holes_of_union(shp))
