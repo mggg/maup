@@ -177,7 +177,7 @@ def doctor(source, target=None):
     shapefiles = [source]
     source_union = unary_union(get_geometries(source))
 
-    if target:
+    if target is not None:
         shapefiles.append(target)
 
         target_union = unary_union(get_geometries(source))
@@ -186,12 +186,14 @@ def doctor(source, target=None):
         assert sym_area == 0, "The unions of target and source differ!"
 
     for shp in shapefiles:
+        assert shp["geometry"].apply(lambda x: isinstance((Polygon, MultiPolygon))).all(), "Some rows do not have geometries"
+
         overlaps = count_overlaps(shp)
         holes = len(holes_of_union(shp))
+
         assert overlaps == 0, "There are {overlaps} overlaps!"
         assert holes == 0, "There are {holes} holes!"
         assert shp.is_valid.all(), "There are some invalid geometries!"
-        apply_func_to_polygon_parts(lambda x: x)
 
     return True
 
