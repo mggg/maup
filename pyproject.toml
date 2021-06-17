@@ -1,10 +1,19 @@
 [tool.poetry]
 name = "maup"
-version = "0.6"
+version = "1.0.0"
 description = "The geospatial toolkit for redistricting data"
-authors = ["Max Hully <max@mggg.org>"]
-maintainers = ["Max Fan <root@max.fan>"]
+authors = ["Max Hully <max@mggg.org>", "Max Fan <root@max.fan>"]
+readme = "README.md"
 license = "MIT"
+classifiers=[
+	"Programming Language :: Python :: 3.6",
+	"Programming Language :: Python :: 3.7",
+	"Programming Language :: Python :: 3.8",
+	"Operating System :: OS Independent",
+	"License :: OSI Approved :: MIT License",
+]
+include = ["best-practices.md"]
+exclude = ["examples/", "tests/"]
 
 [tool.poetry.dependencies]
 python = "^3.7.1"
