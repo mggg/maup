@@ -157,9 +157,9 @@ def crop_to(source, target):
     cropped_geometries = get_geometries(source).apply(lambda x: x.intersection(target_union))
 
     if (cropped_geometries.area == 0).any():
-        warnings.warn("Some cropped geometries have zero area, likely due to\n",
-                      "large differences in the union of the geometries in your\n",
-                      "source and target shapefiles. This may become an issue\n",
+        warnings.warn("Some cropped geometries have zero area, likely due to\n"+
+                      "large differences in the union of the geometries in your\n"+
+                      "source and target shapefiles. This may become an issue\n"+
                       "when maupping.\n",
                       AreaCroppingWarning
         )
@@ -191,8 +191,8 @@ def doctor(source, target=None):
         overlaps = count_overlaps(shp)
         holes = len(holes_of_union(shp))
 
-        assert overlaps == 0, "There are {overlaps} overlaps!"
-        assert holes == 0, "There are {holes} holes!"
+        assert overlaps == 0, f"There are {overlaps} overlaps!"
+        assert holes == 0, f"There are {holes} holes!"
         assert shp.is_valid.all(), "There are some invalid geometries!"
 
     return True
