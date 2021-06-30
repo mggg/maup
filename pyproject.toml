@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "maup"
-version = "1.0.0"
+version = "1.0.2"
 description = "The geospatial toolkit for redistricting data"
 authors = ["Max Hully <max@mggg.org>", "Max Fan <root@max.fan>"]
 readme = "README.md"

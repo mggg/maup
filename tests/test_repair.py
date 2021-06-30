@@ -2,6 +2,7 @@ import geopandas
 import maup
 from maup.repair import count_overlaps
 import pytest
+import math
 
 # These tests are losely based off the test_example_case in test_prorate.py
 
@@ -65,6 +66,8 @@ def test_crop_to():
     weights = maup.normalize(weights, level=0)
     new_precincts_cropped[columns] = maup.prorate(pieces, old_precincts[columns], weights=weights)
 
+    assert new_precincts_cropped.area.sum() != new_precincts.area.sum()
+
     diff_sum = 0
     for col in columns:
         diff = new_precincts_cropped[col].sum() - new_precincts[col].sum()
@@ -74,7 +77,39 @@ def test_crop_to():
 
     # Ideally this would be strictly positive (which would mean less votes are lost after cropping)
     # but crop_to doesn't resolve the missing votes errors yet.
-    assert diff_sum >= 0 
+    assert diff_sum >= 0
+
+def test_crop_to_invariants():
+    old_precincts = geopandas.read_file("zip://./examples/precincts.zip")
+    new_precincts = geopandas.read_file("zip://./examples/new_precincts.zip")
+
+    old_crop = maup.crop_to(old_precincts, new_precincts).unary_union
+    new_crop = maup.crop_to(new_precincts, old_precincts).unary_union
+
+    assert math.isclose(old_crop.area, new_crop.area)
+    assert math.isclose(old_crop.symmetric_difference(new_crop).area, 0)
+    assert old_crop.area >= old_precincts.area
+    assert new_crop.area >= new_precincts.area
+
+def test_expand_to_invariants():
+    old_precincts = geopandas.read_file("zip://./examples/precincts.zip")
+    new_precincts = geopandas.read_file("zip://./examples/new_precincts.zip")
+
+    old_expand = maup.expand_to(old_precincts, new_precincts).unary_union
+    new_expand = maup.expand_to(new_precincts, old_precincts).unary_union
+
+    assert math.isclose(old_expand.area, new_expand.area)
+    assert math.isclose(old_expand.symmetric_difference(new_expand).area, 0)
+    assert old_expand.area >= old_precincts.area
+    assert new_expand.area >= new_precincts.area
+
+def test_expand_greater_than_crop():
+    old_precincts = geopandas.read_file("zip://./examples/precincts.zip")
+    new_precincts = geopandas.read_file("zip://./examples/new_precincts.zip")
+
+    old_expand = maup.expand_to(old_precincts, new_precincts).unary_union
+    old_crop = maup.crop_to(old_precincts, new_precincts).unary_union
+    assert old_expand.area > old_crop.area
 
 # TODO: fix and add more tests
 # def test_snap_autorepair_MI():

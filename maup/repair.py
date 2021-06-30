@@ -1,3 +1,4 @@
+import math
 import pandas
 import functools
 import warnings
@@ -117,12 +118,10 @@ def autorepair(geometries, relative_threshold=0.1):
     """
     shp = geometries.copy()
 
+    shp["geometry"] = make_valid(shp)
     shp["geometry"] = remove_repeated_vertices(shp)
-    shp["geometry"] = make_valid(shp)
     shp["geometry"] = resolve_overlaps(shp, relative_threshold=relative_threshold)
-    shp["geometry"] = make_valid(shp)
     shp["geometry"] = close_gaps(shp, relative_threshold=relative_threshold)
-    shp["geometry"] = make_valid(shp)
 
     return shp["geometry"]
 
@@ -166,6 +165,23 @@ def crop_to(source, target):
 
     return cropped_geometries
 
+def expand_to(source, target):
+    """
+    Expands the source geometries to the target geometries.
+    """
+    geometries = get_geometries(source).simplify(0).buffer(0)
+
+    source_union = unary_union(geometries)
+
+    leftover_geometries = get_geometries(target).apply(lambda x: x - source_union)
+    leftover_geometries = leftover_geometries[~leftover_geometries.is_empty].explode()
+
+    geometries = absorb_by_shared_perimeter(
+        leftover_geometries, get_geometries(source), relative_threshold=None
+    )
+
+    return geometries
+
 def doctor(source, target=None):
     """
     Detects quality issues in a given set of source and target geometries. Quality
@@ -180,8 +196,8 @@ def doctor(source, target=None):
     if target is not None:
         shapefiles.append(target)
 
-        target_union = unary_union(get_geometries(source))
-        sym_area = target_union.symmetric_difference(target_union).area
+        target_union = unary_union(get_geometries(target))
+        sym_area = target_union.symmetric_difference(source_union).area
 
         assert sym_area == 0, "The unions of target and source differ!"
 
