@@ -200,8 +200,8 @@ def doctor(source, target=None):
     if target is not None:
         shapefiles.append(target)
 
-        target_union = unary_union(get_geometries(source))
-        sym_area = target_union.symmetric_difference(target_union).area
+        target_union = unary_union(get_geometries(target))
+        sym_area = target_union.symmetric_difference(source_union).area
 
         assert sym_area == 0, "The unions of target and source differ!"
 
