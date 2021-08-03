@@ -150,6 +150,7 @@ def snap_to_grid(geometries, n=-7):
     func = functools.partial(snap_polygon_to_grid, n=n)
     return geometries["geometry"].apply(lambda x: apply_func_to_polygon_parts(x, func))
 
+@require_same_crs
 def crop_to(source, target):
     """
     Crops the source geometries to the target geometries.
@@ -167,6 +168,7 @@ def crop_to(source, target):
 
     return cropped_geometries
 
+@require_same_crs
 def expand_to(source, target):
     """
     Expands the source geometries to the target geometries.
