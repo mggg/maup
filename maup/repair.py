@@ -1,3 +1,4 @@
+import math
 import pandas
 import functools
 import warnings
@@ -149,6 +150,7 @@ def snap_to_grid(geometries, n=-7):
     func = functools.partial(snap_polygon_to_grid, n=n)
     return geometries["geometry"].apply(lambda x: apply_func_to_polygon_parts(x, func))
 
+@require_same_crs
 def crop_to(source, target):
     """
     Crops the source geometries to the target geometries.
@@ -165,6 +167,24 @@ def crop_to(source, target):
         )
 
     return cropped_geometries
+
+@require_same_crs
+def expand_to(source, target):
+    """
+    Expands the source geometries to the target geometries.
+    """
+    geometries = get_geometries(source).simplify(0).buffer(0)
+
+    source_union = unary_union(geometries)
+
+    leftover_geometries = get_geometries(target).apply(lambda x: x - source_union)
+    leftover_geometries = leftover_geometries[~leftover_geometries.is_empty].explode()
+
+    geometries = absorb_by_shared_perimeter(
+        leftover_geometries, get_geometries(source), relative_threshold=None
+    )
+
+    return geometries
 
 def doctor(source, target=None):
     """
