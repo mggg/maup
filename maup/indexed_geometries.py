@@ -32,7 +32,7 @@ class IndexedGeometries:
         prepared_container = prep(container)
 
         if len(relevant_geometries) == 0:  # in case nothing is covered
-            return geopandas.GeoSeries()
+            return relevant_geometries
         else:
             selected_geometries = relevant_geometries.apply(prepared_container.covers)
             return relevant_geometries[selected_geometries]
