@@ -11,8 +11,11 @@ def assign(sources, targets):
     """
     assignment = assign_by_covering(sources, targets)
     unassigned = sources[assignment.isna()]
-    assignments_by_area = assign_by_area(unassigned, targets)
-    assignment.update(assignments_by_area)
+
+    if len(unassigned):  # skip if done
+        assignments_by_area = assign_by_area(unassigned, targets)
+        assignment.update(assignments_by_area)
+
     assignment.name = None
     return assignment.astype(targets.index.dtype, errors="ignore")
 
