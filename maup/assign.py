@@ -1,3 +1,5 @@
+import pandas
+
 from .indexed_geometries import IndexedGeometries
 from .intersections import intersections
 from .crs import require_same_crs
@@ -9,14 +11,20 @@ def assign(sources, targets):
     target that covers it, or, if no target covers the entire source, the
     target that covers the most of its area.
     """
-    assignment = assign_by_covering(sources, targets)
+    assignment = pandas.Series(
+        assign_by_covering(sources, targets),
+        dtype="float"
+    )
+    assignment.name = None
     unassigned = sources[assignment.isna()]
 
     if len(unassigned):  # skip if done
-        assignments_by_area = assign_by_area(unassigned, targets)
+        assignments_by_area = pandas.Series(
+            assign_by_area(unassigned, targets),
+            dtype="float"
+        )
         assignment.update(assignments_by_area)
 
-    assignment.name = None
     return assignment.astype(targets.index.dtype, errors="ignore")
 
 
