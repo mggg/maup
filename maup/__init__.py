@@ -11,7 +11,7 @@ import geopandas
 # mitigate https://github.com/geopandas/geopandas/issues/2199
 geopandas.options.use_pygeos = False  
 
-__version__ = "1.0.4"
+__version__ = "1.0.5"
 __all__ = [
     "assign",
     "intersections",

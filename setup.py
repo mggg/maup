@@ -1,11 +1,11 @@
 from setuptools import find_packages, setup
 
-version = "0.6"
+version = "1.0.5"
 
 with open("./README.md") as f:
     long_description = f.read()
 
-requirements = ["numpy", "pandas", "geopandas", "shapely", "tqdm"]
+requirements = ["numpy", "pandas", "geopandas", "shapely", "tqdm", "poetry"]
 
 setup(
     name="maup",
