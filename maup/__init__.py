@@ -6,7 +6,12 @@ from .repair import close_gaps, resolve_overlaps, make_valid, autorepair, snap_t
 from .normalize import normalize
 from .progress_bar import progress
 
-__version__ = "1.0.3"
+import geopandas
+
+# mitigate https://github.com/geopandas/geopandas/issues/2199
+geopandas.options.use_pygeos = False  
+
+__version__ = "1.0.4"
 __all__ = [
     "assign",
     "intersections",
