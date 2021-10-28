@@ -8,10 +8,15 @@ from .progress_bar import progress
 
 import geopandas
 
-# mitigate https://github.com/geopandas/geopandas/issues/2199
-geopandas.options.use_pygeos = False  
+# warn about https://github.com/geopandas/geopandas/issues/2199
+if geopandas.options.use_pygeos:
+    raise ImportError(
+        "GerryChain cannot use GeoPandas when PyGeos is enabled. Disable or "
+        "uninstall PyGeos. You can disable PyGeos in GeoPandas by setting "
+        "`geopandas.options.use_pygeos = False` before importing your shapefile."
+    )
 
-__version__ = "1.0.5"
+__version__ = "1.0.6"
 __all__ = [
     "assign",
     "intersections",
