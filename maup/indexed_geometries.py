@@ -45,8 +45,11 @@ class IndexedGeometries:
                 target_geometries.items(), len(target_geometries)
             )
         ]
-        assignment = pandas.concat(groups).reindex(self.index)
-        return assignment
+        if groups:
+            return pandas.concat(groups).reindex(self.index)
+        else:
+            return geopandas.GeoSeries()
+
 
     def enumerate_intersections(self, targets):
         target_geometries = get_geometries(targets)
