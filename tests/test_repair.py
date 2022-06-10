@@ -38,7 +38,7 @@ def test_example_autorepair_MI():
 
     assert count_overlaps(shp) == 0
     holes = maup.repair.holes_of_union(shp)
-    assert holes.unary_union.area < 1e-10 # overlaps are not guaranteed to disappear
+    assert holes.empty or holes.unary_union.area < 1e-10 # overlaps are not guaranteed to disappear
     assert maup.doctor(shp)
 
 def test_snap_shp_to_grid():
