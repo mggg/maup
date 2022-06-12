@@ -16,7 +16,7 @@ if geopandas.options.use_pygeos:
         "`geopandas.options.use_pygeos = False` before importing your shapefile."
     )
 
-__version__ = "1.0.6"
+__version__ = "1.0.8"
 __all__ = [
     "assign",
     "intersections",
