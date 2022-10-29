@@ -12,14 +12,11 @@ def get_geometries(geometries):
 class IndexedGeometries:
     def __init__(self, geometries):
         self.geometries = get_geometries(geometries)
-        for i, geometry in self.geometries.items():
-            geometry.index = i
         self.spatial_index = STRtree(self.geometries)
-        self.index = self.geometries.index
 
     def query(self, geometry):
-        relevant_indices = [geom.index for geom in self.spatial_index.query(geometry)]
-        relevant_geometries = self.geometries.loc[relevant_indices]
+        relevant_indices = [index for index in self.spatial_index.query(geometry)]
+        relevant_geometries = self.geometries.iloc[relevant_indices]
         return relevant_geometries
 
     def intersections(self, geometry):
@@ -46,10 +43,9 @@ class IndexedGeometries:
             )
         ]
         if groups:
-            return pandas.concat(groups).reindex(self.index)
+            return pandas.concat(groups).reindex(self.geometries.index)
         else:
             return geopandas.GeoSeries()
-
 
     def enumerate_intersections(self, targets):
         target_geometries = get_geometries(targets)
