@@ -20,7 +20,7 @@ python = "^3.7.1"
 numpy = "^1.20.3"
 pandas = "^1.2.4"
 geopandas = ">=0.9.0"
-Shapely = "^1.7.1"
+Shapely = ">=2.0.b2"
 tqdm = "^4.61.1"
 
 [tool.poetry.dev-dependencies]
