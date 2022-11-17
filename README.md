@@ -134,7 +134,7 @@ prorate by population (`"TOTPOP"`):
 >>>
 >>> # We prorate the vote totals according to each block's share of the overall
 >>> # precinct population:
->>> weights = blocks.TOTPOP / assignment.map(precincts.TOTPOP)
+>>> weights = blocks.TOTPOP / assignment.map(blocks.TOTPOP.groupby(assignment).sum())
 >>> prorated = maup.prorate(assignment, precincts[election_columns], weights)
 >>>
 >>> # Add the prorated vote totals as columns on the `blocks` GeoDataFrame:
