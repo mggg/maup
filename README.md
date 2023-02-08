@@ -39,6 +39,9 @@ includes many data science packages that you might find useful.
 
 To install `maup` from PyPI, run `pip install maup` from your terminal.
 
+For development, `maup` uses [Poetry](https://python-poetry.org/docs/basic-usage/).
+To develop new `maup` features, clone this repository and run `poetry install`.
+
 ## Examples
 
 Here are some basic situations where you might find `maup` helpful. For these
