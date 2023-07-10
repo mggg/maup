@@ -30,6 +30,8 @@ def assign(sources, targets, return_report=False):
         )
         assignment.update(assignments_by_area)
 
+    return_report.unassigned_sources = sources[assignment.isna()]
+
     if not return_report:
         return assignment.astype(targets.index.dtype, errors="ignore")
     else:
