@@ -24,6 +24,8 @@ def assign(sources, targets):
             dtype="float"
         )
         assignment.update(assignments_by_area)
+        
+# We should add a warning here if there are still unassigned source geometries!
 
     return assignment.astype(targets.index.dtype, errors="ignore")
 
