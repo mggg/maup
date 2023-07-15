@@ -149,7 +149,7 @@ prorate by population (`"TOTPOP"`):
 3    15.50     2.67
 4     3.28     0.45
 
-```python
+```
 
 #### Warning about areal interpolation
 
@@ -169,7 +169,7 @@ using
 
 ```python
 >>> weights = weights.fillna(0)
-```python
+```
 
 (2) In some cases, zero-population precincts may have a small nonzero number of recorded
 votes in some elections. The procedure outlined above will lose these votes in the 
@@ -216,7 +216,7 @@ the example above, and then reaggregate from blocks to the new precincts.
 2	 97.00	  17.00
 3	 91.16	   5.55
 4	246.00	  20.00
-```python
+```
 
 As a sanity check, let's make sure that no votes were lost in either step.
 Total votes in the old precincts:
@@ -235,7 +235,7 @@ dtype: float64
 SEN18D    20565.656675
 SEN18R     2947.046857
 dtype: float64
-```python
+```
 
 Oh no - what happened??? All votes were successfully disaggregated to blocks, but a
 significant percentage were lost when reaggregating to new precincts.
@@ -251,22 +251,28 @@ print(blocks_to_new_precincts_assignment.isna().sum())
 3014
 884
 1227
-```python
+```
 
 So, out of 3,014 total Census blocks, 884 were not assigned to any old precinct and 
 1,227 were not assigned to any new precinct.  If we plot the shapefiles, we can see why:
 ```python
 >>> blocks.plot()
-```python
+```
+
 ![Providence blocks](./examples/Providence_blocks_plot.png)
+
 ```python
 >>> old_precincts.plot()
-```python
+```
+
 ![Providence old precincts](./examples/old_precincts.png)
+
 ```python
 >>> new_precincts.plot()
-```python
+```
+
 ![Providence new precincts](./examples/new_precincts.png)
+
 The boundaries of the regions covered by these shapefiles are substantially 
 different---and that doesn't even get into the possibility that the precinct shapefiles
 may have gaps between precinct polygons that some blocks may fall into.
@@ -285,7 +291,7 @@ TOTPOP      140332
 NH_BLACK     19345
 NH_WHITE     46667
 dtype: int64
-```python
+```
 
 #### Moral: Precinct shapefiles often have _terrible_ topological issues!
 These issues should be diagnosed and repaired to the greatest extent possible before
@@ -346,7 +352,7 @@ The blocks shapefile, like all shapefiles from the Census, is clean:
 ```python
 >>> maup.doctor(blocks)
 True
-```python
+```
 
 The old precincts shapefile, however, has some minor issues:
 ```python
@@ -354,7 +360,7 @@ The old precincts shapefile, however, has some minor issues:
 There are 2 overlaps.
 There are 3 holes.
 False
-```python
+```
 
 `maup` provides an `autorepair` function with a variety of options for fixing these issues.  
 
@@ -377,7 +383,7 @@ Assigning order 2 pieces...
 Closing gaps...
 >>> maup.doctor(old_precincts_repaired)
 True
-```python
+```
 
 Here's a more detailed look at what's going on under the hood for a simple example.
 First, we'll use `shapely` to create the polygons from scratch:
@@ -393,7 +399,7 @@ geometries = geopandas.GeoSeries([
     Polygon([(3,0), (4,0), (4,2), (3,2)]
 ])
 geometries.plot(cmap = "tab20", alpha=0.8)
-```python
+```
 
 ![geometries](./examples/example_geometries.png)
 
@@ -403,7 +409,7 @@ resolve the overlaps and leave the gaps alone:
 ```python
 geometries_overlaps_fixed = maup.autorepair(geometries, fill_gaps=False)
 geometries_overlaps_fixed.plot(cmap = "tab20", alpha=0.8)
-```python
+```
 
 ![geometries_overlaps_fixed](./examples/example_geometries_overlaps_fixed.png)
 
@@ -414,7 +420,7 @@ gaps:
 ```python
 geometries_fixed = maup.autorepair(geometries)
 geometries_fixed.plot(cmap = "tab20", alpha=0.8)
-```python
+```
 
 ![geometries_fixed](./examples/example_geometries_fixed.png)
 
@@ -433,7 +439,7 @@ Here is the result of applying this option to our example:
 ```python
 geometries_fixed_rook_to_queen = maup.autorepair(geometries, min_rook_length = 0.3)
 geometries_fixed_rook_to_quee.plot(cmap = "tab20", alpha=0.8)
-```python
+```
 
 ![geometries_fixed_rook_to_queen](./examples/example_geometries_fixed_rook_to_queen.png)
 
@@ -448,20 +454,20 @@ decimal places):
 
 ```python
 keep_this_hole = Polygon([(2.0, 1.45), (2.0, 0.55), (2.41, 1.0)])
-```python
+```
 
 Create a GeoSeries containing this hole, with no CRS needed since the main shapefile
 doesn't have one:
 
 ```python
 keep_this_hole_series = geopandas.GeoSeries([keep_this_hole])
-```python
+```
 
 Use the `holes_to_keep` option:
 ```python
 geometries_fixed_with_hole = maup.autorepair(geometries, holes_to_keep = keep_this_hole_series)
 geometries_fixed_with_hole.plot(cmap = "tab20", alpha=0.8)
-```python
+```
 
 ![geometries_fixed_with_hole](./examples/example_geometries_fixed_with_hole.png)
 
@@ -471,7 +477,7 @@ Use the `holes_to_keep` option:
 ```python
 geometries_fixed_with_hole_and_rook_to_queen = maup.autorepair(geometries, min_rook_length = 0.3, holes_to_keep = keep_this_hole_series)
 geometries_fixed_with_hole_and_rook_to_queen.plot(cmap = "tab20", alpha=0.8)
-```python
+```
 
 ![geometries_fixed_with_hole_and_rook_to_queen](./examples/example_geometries_fixed_with_hole_and_rook_to_queen.png)
 
