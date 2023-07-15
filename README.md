@@ -265,13 +265,13 @@ So, out of 3,014 total Census blocks, 884 were not assigned to any old precinct 
 >>> old_precincts.plot()
 ```
 
-![Providence old precincts](./examples/old_precincts.png)
+![Providence old precincts](./examples/Providence_old_precincts.png)
 
 ```python
 >>> new_precincts.plot()
 ```
 
-![Providence new precincts](./examples/new_precincts.png)
+![Providence new precincts](./examples/Providence_new_precincts.png)
 
 The boundaries of the regions covered by these shapefiles are substantially 
 different---and that doesn't even get into the possibility that the precinct shapefiles
