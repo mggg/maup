@@ -174,8 +174,15 @@ MAIN FUNCTION
 def autorepair(geometries0_df, fill_gaps = True, min_rook_length = None, 
                   holes_to_keep = None):
     
-    if isinstance(geometries0_df, geopandas.GeoDataFrame) == False:
-        raise TypeError(f"Input must be a GeoDataFrame!")
+    if isinstance(geometries0_df, geopandas.GeoSeries):
+        geometries_df = geopandas.GeoDataFrame(geometry = geometries0_df)
+    
+    elif isinstance(geometries0_df, geopandas.GeoDataFrame):
+        geometries_df = geometries0_df.copy()
+    
+    else:
+        raise TypeError(f"Input must be a geopandas GeoSeries or GeoDataFrame!")
+        
         
     geometries_df = geometries0_df.copy()
     
@@ -206,7 +213,7 @@ def autorepair(geometries0_df, fill_gaps = True, min_rook_length = None,
 
     # Use data about the holes to fill holes if desired.
     if fill_gaps == True:
-        print("Closing gaps...")
+        print("Filling gaps...")
         reconstructed_df = close_gaps(reconstructed_df, holes_df)
         
     
@@ -279,12 +286,6 @@ def autorepair(geometries0_df, fill_gaps = True, min_rook_length = None,
             if num_components(reconstructed_df["geometry"][ind]) > num_components(geometries0_df["geometry"][ind]):
                 print("WARNING: A component of the geometry at index ", ind, " may have been disconnected!")
 
-    if min_rook_length is not None:
-        # Find all inter-polygon boundaries shorter than min_rook_length and replace them
-        # with queen adjacencies by manipulating coordinates of all surrounding polygon.
-        print("Converting small rook adjacencies to queen...")
-        reconstructed_df = small_rook_to_queen(reconstructed_df, min_rook_length)
-        
     if holes_to_keep is not None:    
         holes_to_keep = get_geometries(holes_to_keep)
         
@@ -296,8 +297,18 @@ def autorepair(geometries0_df, fill_gaps = True, min_rook_length = None,
             possible_geom_indices = [reconstructed_index_by_iloc[k] for k in possible_geom_integer_indices] 
             for g_ind in possible_geom_indices:
                 reconstructed_df['geometry'][g_ind] = reconstructed_df['geometry'][g_ind].difference(keeper)
+
+    if min_rook_length is not None:
+        # Find all inter-polygon boundaries shorter than min_rook_length and replace them
+        # with queen adjacencies by manipulating coordinates of all surrounding polygon.
+        print("Converting small rook adjacencies to queen...")
+        reconstructed_df = small_rook_to_queen(reconstructed_df, min_rook_length)
+        
     
-    return reconstructed_df
+    if isinstance(geometries0_df, geopandas.GeoDataFrame):
+        return reconstructed_df
+    else:
+        return(reconstructed_df.geometry)
    
 
 # SUPPORTING FUNCTIONS:
