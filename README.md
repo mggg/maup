@@ -39,10 +39,10 @@ in the `examples` folder of this repo, reprojected to a non-geographic coordinat
 reference system (CRS) optimized
 for Rhode Island.
 
-** Many of maup's functions behave badly in geographic projections (i.e., lat/long 
+*Many of maup's functions behave badly in geographic projections (i.e., lat/long 
 coordinates), which are the default for shapefiles from the U.S. Census bureau. In 
 order to find an appropriate CRS for a particular shapefile, consult the database
-at [https://epsg.org](https://epsg.org).**
+at [https://epsg.org](https://epsg.org).*
 
 
 ```python
@@ -67,20 +67,19 @@ is assigned to the target geometry that covers the largest portion of its area.
 ```python
 >>> import maup
 >>>
->>> precinct_to_district_assignment = maup.assign(precincts, districts)
+>>> precincts_to_districts_assignment = maup.assign(precincts, districts)
 >>> # Add the assigned districts as a column of the `precincts` GeoDataFrame:
->>> precincts["DISTRICT"] = precinct_to_district_assignment
+>>> precincts["DISTRICT"] = precincts_to_districts_assignment
 >>> precinct_to_district_assignment.head()
 0     7
 1     5
 2    13
 3     6
 4     1
-dtype: int64
 
 ```
 
-As an aside, you can use that `precinct_to_district_assignment` object to create a
+As an aside, you can use that `precincts_to_districts_assignment` object to create a
 [gerrychain](https://gerrychain.readthedocs.io/en/latest/) `Partition`
 representing this districting plan.
 
@@ -110,17 +109,19 @@ operation:
 
 If you want to move data from one set of geometries to another but your source
 and target geometries do not nest neatly (e.g., have overlaps), see
-[Prorating data when units do not nest neatly](#prorating-data-when-units-do-not-nest-neatly).
+[Prorating data when units do not nest neatly](#prorating-data-when-units-do-not-nest-neatly),
+and also 
+[Fixing topological issues, overlaps, and gaps](#fixing-topological-issues-overlaps-and-gaps).
 
 ### Disaggregating data from precincts down to blocks
 
 It's common to have data at a coarser scale that you want to attach to
 finer-scaled geometries. Usually this happens when vote totals for a certain
-election are only reported at the county level, and we want to attach that data
-to precinct geometries.
+election are reported at the precinct level, and we want to attach that data
+to Census block geometries.
 
 Let's say we want to prorate the vote totals in the columns `"PRES16D"`,
-`"PRES16R"` from our `precincts` GeoDataFrame down to our `blocks` GeoDataFrame.
+`"PRES16R"` from our `precincts` shapefile down to our `blocks` shapefile.
 The first crucial step is to decide how we want to distribute a precinct's data
 to the blocks within it. Since we're prorating election data, it makes sense to
 use a block's total population or voting-age population. Here's how we might
@@ -185,7 +186,7 @@ The two sets of precincts will have overlaps, and will not nest neatly like the
 blocks and precincts did in the above examples. (Not that blocks and precincts
 always nest neatly---in fact, they usually don't!)
 
-In most cases, election data should be prorated from each old precincts to the new
+In most cases, election data should be prorated from each old precinct to the new
 precincts with weights proportional to the population of the intersections between
 the old precinct and each new precinct.  The most straightforward way to accomplish 
 this is to first disaggregate the data from the old precincts to Census blocks as in 
@@ -210,12 +211,14 @@ the example above, and then reaggregate from blocks to the new precincts.
 >>>
 >>> new_precincts[election_columns] = blocks[election_columns].groupby(blocks_to_new_precincts_assignment).sum()
 >>> new_precincts[election_columns].round(2).head()
-    SEN18D   SEN18R
-0   728.17    49.38
-1	370.00	  21.00
-2	 97.00	  17.00
-3	 91.16	   5.55
-4	246.00	  20.00
+
+   SEN18D  SEN18R
+0  728.17   49.38
+1  370.00   21.00
+2   97.00   17.00
+3   91.16    5.55
+4  246.00   20.00
+
 ```
 
 As a sanity check, let's make sure that no votes were lost in either step.
@@ -224,17 +227,16 @@ Total votes in the old precincts:
 >>> old_precincts[election_columns].sum()
 SEN18D    23401
 SEN18R     3302
-dtype: float64
+
 >>>
 >>> blocks[election_columns].sum()
 SEN18D    23401.0
 SEN18R     3302.0
-dtype: float64
+
 >>>
 >>> new_precincts[election_columns].sum()
 SEN18D    20565.656675
 SEN18R     2947.046857
-dtype: float64
 ```
 
 Oh no - what happened??? All votes were successfully disaggregated to blocks, but a
@@ -277,20 +279,21 @@ The boundaries of the regions covered by these shapefiles are substantially
 different---and that doesn't even get into the possibility that the precinct shapefiles
 may have gaps between precinct polygons that some blocks may fall into.
 
-Once we know to look for this issue, we can see that it affected the previous example 
-as well:
+Once we know to look for this issue, we can see that it affected the aggregation of
+populations from blocks to precincts as well:
+
 ```python
 >>> blocks[variables].sum()
 TOTPOP      178040
 NH_BLACK     23398
 NH_WHITE     66909
-dtype: int64
+
 >>>
 >>> precincts[variables].sum()
 TOTPOP      140332
 NH_BLACK     19345
 NH_WHITE     46667
-dtype: int64
+
 ```
 
 #### Moral: Precinct shapefiles often have _terrible_ topological issues!
@@ -403,8 +406,8 @@ geometries.plot(cmap = "tab20", alpha=0.8)
 
 ![geometries](./examples/example_geometries.png)
 
-We can call the `autorepair` function with the option `fill_gaps = False` to only 
-resolve the overlaps and leave the gaps alone:
+The first thing that the `autorepair` function does is to resolve overlaps. We can call the `autorepair` 
+function with the option `fill_gaps = False` to just resolve the overlaps and leave the gaps alone:
 
 ```python
 geometries_overlaps_fixed = maup.autorepair(geometries, fill_gaps=False)
@@ -443,7 +446,7 @@ geometries_fixed_rook_to_quee.plot(cmap = "tab20", alpha=0.8)
 
 ![geometries_fixed_rook_to_queen](./examples/example_geometries_fixed_rook_to_queen.png)
 
-Finally, sometimes a shapefile may have gaps that you don't want to fill (for example, a
+Finally, sometimes a shapefile may have some gaps that you don't want to fill (for example, a
 large lake).  In that case, the `autorepair` has a `holes_to_keep` option to specify a
 GeoSeries of holes that should not be filled in.
 #### This GeoSeries must be in the same CRS as the input shapefile!
@@ -471,9 +474,8 @@ geometries_fixed_with_hole.plot(cmap = "tab20", alpha=0.8)
 
 ![geometries_fixed_with_hole](./examples/example_geometries_fixed_with_hole.png)
 
-We can also combine these options:
+These options can also be combined:
 
-Use the `holes_to_keep` option:
 ```python
 geometries_fixed_with_hole_and_rook_to_queen = maup.autorepair(geometries, min_rook_length = 0.3, holes_to_keep = keep_this_hole_series)
 geometries_fixed_with_hole_and_rook_to_queen.plot(cmap = "tab20", alpha=0.8)
