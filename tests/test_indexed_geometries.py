@@ -49,7 +49,10 @@ def test_intersections_correct_when_all_overlapping(four_square_grid, square):
         assert any(overlap.intersection(p).area == p.area for overlap in overlaps)
 
     for p in overlaps:
-        assert any(p.intersection(expected).area == expected.area for expected in expected_polygons)
+        assert any(
+            p.intersection(expected).area == expected.area
+            for expected in expected_polygons
+        )
 
 
 def test_returns_empty_when_no_overlaps(four_square_grid, distant_polygon):

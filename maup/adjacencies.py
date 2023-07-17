@@ -2,7 +2,7 @@ import warnings
 
 from geopandas import GeoSeries, GeoDataFrame
 
-from shapely import make_valid 
+from shapely import make_valid
 
 from .indexed_geometries import IndexedGeometries, get_geometries
 from .progress_bar import progress
@@ -16,7 +16,7 @@ class IslandWarning(UserWarning):
     pass
 
 
-def iter_adjacencies(geometries):   
+def iter_adjacencies(geometries):
     indexed = IndexedGeometries(geometries)
     for i, geometry in progress(indexed.geometries.items(), len(indexed.geometries)):
         possible = indexed.query(geometry)
@@ -29,11 +29,14 @@ def iter_adjacencies(geometries):
 
 # Added option to output result as GeoDataFrame instead of GeoSeries
 def adjacencies(
-    geometries, 
+    geometries,
     output_type="geoseries",
-    adjacency_type="rook", *, warn_for_overlaps=True, warn_for_islands=True
+    adjacency_type="rook",
+    *,
+    warn_for_overlaps=True,
+    warn_for_islands=True
 ):
-    """Returns adjacencies between geometries.     
+    """Returns adjacencies between geometries.
     The default return type is a
     `GeoSeries` with a `MultiIndex`, whose (i, j)th entry is the pairwise
     intersection between geometry `i` and geometry `j`. We ensure that
@@ -49,17 +52,19 @@ def adjacencies(
 
     geometries = get_geometries(geometries)
     geometries = make_valid(geometries)
-    
-# Change here suggested by Hazel to handle the case where there are no adjacencies:
+
+    # Change here suggested by Hazel to handle the case where there are no adjacencies:
     adjs = list(iter_adjacencies(geometries))
     if adjs:
         index, geoms = zip(*adjs)
     else:
-        index, geoms = [[],[]]    
-    
-# Made a change here to add the GeoDataFrame option:
+        index, geoms = [[], []]
+
+    # Made a change here to add the GeoDataFrame option:
     if output_type == "geodataframe":
-        inters = GeoDataFrame({"neighbors" : index, "geometry" : geoms}, crs = geometries.crs)
+        inters = GeoDataFrame(
+            {"neighbors": index, "geometry": geoms}, crs=geometries.crs
+        )
     else:
         inters = GeoSeries(geoms, index=index, crs=geometries.crs)
 
@@ -76,12 +81,16 @@ def adjacencies(
                 OverlapWarning,
             )
 
-# Made a change here to accomodate the GeoDataFrame option:
+    # Made a change here to accomodate the GeoDataFrame option:
     if warn_for_islands:
         if output_type == "geodataframe":
-            islands = set(geometries.index) - set(i for pair in inters["neighbors"] for i in pair)
+            islands = set(geometries.index) - set(
+                i for pair in inters["neighbors"] for i in pair
+            )
         else:
-            islands = set(geometries.index) - set(i for pair in inters.index for i in pair)
+            islands = set(geometries.index) - set(
+                i for pair in inters.index for i in pair
+            )
         if len(islands) > 0:
             warnings.warn(
                 "Found islands.\n" "Indices of islands: {}".format(islands),

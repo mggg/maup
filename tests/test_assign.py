@@ -139,6 +139,7 @@ def test_assign_dispatches_to_without_area_and_with_area(
 
     assert (expected == assignment).all()
 
+
 def test_example_case():
     # Losely based off test_example_case function in test_prorate.py
     blocks = geopandas.read_file("zip://./examples/blocks.zip")
@@ -147,5 +148,5 @@ def test_example_case():
     assignment = assign(blocks, precincts)
     precincts[columns] = blocks[columns].groupby(assignment).sum()
     assert (precincts[columns] > 0).sum().sum() > len(precincts)
-    for col in columns: # fails because it does not neatly cover
+    for col in columns:  # fails because it does not neatly cover
         assert abs(precincts[col].sum() - blocks[col].sum()) / blocks[col].sum() < 0.5

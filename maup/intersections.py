@@ -9,13 +9,13 @@ from .indices import get_geometries_with_range_index
 @require_same_crs
 
 # Added option to output result as GeoDataFrame instead of GeoSeries
-def intersections(sources, targets, output_type= "geoseries", area_cutoff=None):
+def intersections(sources, targets, output_type="geoseries", area_cutoff=None):
     """Computes all of the nonempty intersections between two sets of geometries.
-    By default, the returned `~geopandas.GeoSeries` will have a MultiIndex, where the 
+    By default, the returned `~geopandas.GeoSeries` will have a MultiIndex, where the
     geometry at index *(i, j)* is the intersection of ``sources[i]`` and ``targets[j]``
-    (if it is not empty).  
+    (if it is not empty).
     If output_type == "geodataframe", the return type is a range-indexed GeoDataFrame
-    with "source" and "target" columns containing the indices i,j, respectively, for the 
+    with "source" and "target" columns containing the indices i,j, respectively, for the
     intersection of ``sources[i]`` and ``targets[j]``
     :param sources: geometries
     :type sources: :class:`~geopandas.GeoSeries` or :class:`~geopandas.GeoDataFrame`
@@ -26,10 +26,10 @@ def intersections(sources, targets, output_type= "geoseries", area_cutoff=None):
         area greater than ``area_cutoff``
     :type area_cutoff: Number or None
     """
-    
+
     reindexed_sources = get_geometries_with_range_index(sources)
     reindexed_targets = get_geometries_with_range_index(targets)
-        
+
     spatially_indexed_sources = IndexedGeometries(reindexed_sources)
 
     records = [
@@ -39,11 +39,11 @@ def intersections(sources, targets, output_type= "geoseries", area_cutoff=None):
             reindexed_targets
         )
     ]
-    
+
     df = GeoDataFrame.from_records(records, columns=["source", "target", "geometry"])
     df = df.sort_values(by=["source", "target"]).reset_index(drop=True)
     df.crs = sources.crs
-    
+
     geometries = df.set_index(["source", "target"]).geometry
     geometries.sort_index(inplace=True)
     geometries.crs = sources.crs

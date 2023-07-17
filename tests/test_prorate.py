@@ -90,7 +90,11 @@ def test_example_case():
 
     assert (new_precincts[columns] > 0).sum().sum() > len(new_precincts) / 2
     for col in columns:
-        assert abs(new_precincts[col].sum() - old_precincts[col].sum()) / old_precincts[col].sum() < 0.1
+        assert (
+            abs(new_precincts[col].sum() - old_precincts[col].sum())
+            / old_precincts[col].sum()
+            < 0.1
+        )
 
 
 def test_trivial_case(sources):

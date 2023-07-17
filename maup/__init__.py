@@ -9,13 +9,12 @@ from .progress_bar import progress
 # Moved the source for the import of make_valid from .repair to shapely since it lives
 # there now and the maup version should be removed.  (Also removing make_valid from the
 # __all__ list below.)
-from shapely import make_valid 
+from shapely import make_valid
 
-# For the old autorepair functions, uncomment the following line, along with the 
+# For the old autorepair functions, uncomment the following line, along with the
 # corresponding line in the __all__ assignments below:
 
 # from .repair_old import close_gaps_old, resolve_overlaps_old, autorepair_old
-
 
 
 import geopandas
@@ -41,6 +40,6 @@ __all__ = [
     "crop_to",
     "doctor",
     "normalize",
-    "progress"
+    "progress",
 ]
 # + ["autorepair_old", "close_gaps_old", "resolve_overlaps_old"]
