@@ -59,7 +59,7 @@ def holes(geometry):
 
 
 
-def close_gaps_old(geometries, relative_threshold=0.1):
+def close_gaps(geometries, relative_threshold=0.1):
     """Closes gaps between geometries by assigning the hole to the polygon
     that shares the most perimeter with the hole.
 
@@ -77,7 +77,7 @@ def close_gaps_old(geometries, relative_threshold=0.1):
     )
 
 
-def resolve_overlaps_old(geometries, relative_threshold=0.1):
+def resolve_overlaps(geometries, relative_threshold=0.1):
     """For any pair of overlapping geometries, assigns the overlapping area to the
     geometry that shares the most perimeter with the overlap. Returns the GeoSeries
     of geometries, which will have no overlaps.
@@ -114,7 +114,7 @@ def resolve_overlaps_old(geometries, relative_threshold=0.1):
         overlaps, with_overlaps_removed, relative_threshold=None
     )
 
-def autorepair_old(geometries, relative_threshold=0.1):
+def autorepair(geometries, relative_threshold=0.1):
     """
     Applies all the tricks in `maup.repair` with default args. Should work by default.
     The default `relative_threshold` is `0.1`. This default is chosen to include
@@ -123,9 +123,6 @@ def autorepair_old(geometries, relative_threshold=0.1):
     basis. Set `relative_threshold=None` to attempt to resolve all overlaps. See
     `resolve_overlaps()` and `close_gaps()` for more.
     """
-# Edited to allow for the possibility that input is a GeoSeries instead of a 
-# GeoDataFrame; this relies on all the functions called here having been similarly
-# edited.
     geometries = get_geometries(geometries)
 
     geometries = remove_repeated_vertices(geometries)
@@ -137,43 +134,12 @@ def autorepair_old(geometries, relative_threshold=0.1):
 
     return geometries
     
-#    shp = geometries.copy()
-
-#    shp["geometry"] = remove_repeated_vertices(shp)
-#    shp["geometry"] = make_valid(shp)
-#    shp["geometry"] = resolve_overlaps(shp, relative_threshold=relative_threshold)
-#    shp["geometry"] = make_valid(shp)
-#    shp["geometry"] = close_gaps(shp, relative_threshold=relative_threshold)
-#    shp["geometry"] = make_valid(shp)
-
-#    return shp["geometry"]
-
-
-# This function is no longer needed; shapely 2's make_valid function applies
-# equally well to single geometries or GeoSeries, and keeping it while importing
-# shapely's version creates a name conflict.
-# When applied to a GeoDataFrame, shapely.make_valid
-# returns the GeoSeries consisting of the validated geometries of the 
-# GeoData Frame, so the current behavior will be retained for GeoDataFrames
-# and expanded to work as well on GeoSeries and single geometries.
-
-# def make_valid(geometries):
-#     """
-#     Applies the shapely .buffer(0) and make_valid (once released) trick to all
-#     geometries. Should help resolve various topological issues in shapefiles.
-#     return geometries["geometry"].simplify(0).buffer(0)
-#     # return geometries["geometry"].apply(lambda x: make_valid(x))
-
-
 def remove_repeated_vertices(geometries):
     """
     Removes repeated vertices. Vertices are considered to be repeated if they
     appear consecutively, excluding the start and end points.
     """
-# Changing "geometries["geometry"]" to "geometries.geometry" so it will work for both 
-# GeoSeries and GeoDataFrames:
     return geometries.geometry.apply(lambda x: apply_func_to_polygon_parts(x, dedup_vertices))
-#    return geometries["geometry"].apply(lambda x: apply_func_to_polygon_parts(x, dedup_vertices))
 
 def snap_to_grid(geometries, n=-7):
     """
@@ -181,10 +147,7 @@ def snap_to_grid(geometries, n=-7):
     resolve floating point precision issues in shapefiles.
     """
     func = functools.partial(snap_polygon_to_grid, n=n)
-# Changing "geometries["geometry"]" to "geometries.geometry" so it will work for both 
-# GeoSeries and GeoDataFrames:
     return geometries.geometry.apply(lambda x: apply_func_to_polygon_parts(x, func))
-#    return geometries["geometry"].apply(lambda x: apply_func_to_polygon_parts(x, func))
 
 @require_same_crs
 def crop_to(source, target):

@@ -26,8 +26,6 @@ def iter_adjacencies(geometries):
         for j, inter in inters.items():
             yield (i, j), inter
 
-
-# Added option to output result as GeoDataFrame instead of GeoSeries
 def adjacencies(
     geometries, 
     output_type="geoseries",
@@ -50,14 +48,12 @@ def adjacencies(
     geometries = get_geometries(geometries)
     geometries = make_valid(geometries)
     
-# Change here suggested by Hazel to handle the case where there are no adjacencies:
     adjs = list(iter_adjacencies(geometries))
     if adjs:
         index, geoms = zip(*adjs)
     else:
         index, geoms = [[],[]]    
     
-# Made a change here to add the GeoDataFrame option:
     if output_type == "geodataframe":
         inters = GeoDataFrame({"neighbors" : index, "geometry" : geoms}, crs = geometries.crs)
     else:
@@ -76,7 +72,6 @@ def adjacencies(
                 OverlapWarning,
             )
 
-# Made a change here to accomodate the GeoDataFrame option:
     if warn_for_islands:
         if output_type == "geodataframe":
             islands = set(geometries.index) - set(i for pair in inters["neighbors"] for i in pair)

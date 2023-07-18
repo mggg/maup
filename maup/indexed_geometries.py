@@ -15,25 +15,14 @@ def get_geometries(geometries):
 class IndexedGeometries:
     def __init__(self, geometries):
         self.geometries = get_geometries(geometries)
-# Lines commented out because this won't work in shapely 2; geometries are now immutable.
-# (But I don't really understand why it was ever here because it isn't needed!)
-#        for i, geometry in self.geometries.items():  
-#            geometry.index = i                        
         self.spatial_index = STRtree(self.geometries)
         self.index = self.geometries.index
 
 
     def query(self, geometry):  
-# Edited because STRTree queries are handled differently in shapely 2; they return 
-# a list of INTEGER INDICES (i.e., RangeIndex) of relevant geometries instead of the 
-# geometries themselves.
-# IMPORTANT EDGE CASE: When "geometry" is multi-part, this query will return a
-# (2 x n) array instead of a (1 x n) array, so it's safest to flatten the query
-# output before proceeding.
-#        relevant_indices = [geom.index for geom in self.spatial_index.query(geometry)]
-        relevant_integer_index_array = self.spatial_index.query(geometry)
-        relevant_integer_indices = [*set(numpy.ndarray.flatten(relevant_integer_index_array))]
-        relevant_geometries = self.geometries.iloc[relevant_integer_indices]
+        relevant_index_array = self.spatial_index.query(geometry)
+        relevant_indices = [*set(numpy.ndarray.flatten(relevant_index_array))]
+        relevant_geometries = self.geometries.iloc[relevant_indices]
         return relevant_geometries
 
     def intersections(self, geometry):  

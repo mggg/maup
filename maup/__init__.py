@@ -14,7 +14,7 @@ from shapely import make_valid
 # For the old autorepair functions, uncomment the following line, along with the 
 # corresponding line in the __all__ assignments below:
 
-# from .repair_old import close_gaps_old, resolve_overlaps_old, autorepair_old
+# from .repair_old import close_gaps, resolve_overlaps, autorepair
 
 
 
@@ -43,4 +43,4 @@ __all__ = [
     "normalize",
     "progress"
 ]
-# + ["autorepair_old", "close_gaps_old", "resolve_overlaps_old"]
+# + ["autorepair", "close_gaps", "resolve_overlaps"]
