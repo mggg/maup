@@ -16,7 +16,7 @@ class IslandWarning(UserWarning):
     pass
 
 
-def iter_adjacencies(geometries):   
+def iter_adjacencies(geometries):
     indexed = IndexedGeometries(geometries)
     for i, geometry in progress(indexed.geometries.items(), len(indexed.geometries)):
         possible = indexed.query(geometry)

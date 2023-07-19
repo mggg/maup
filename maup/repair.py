@@ -128,6 +128,13 @@ def autorepair(geometries, relative_threshold=0.1):
     geometries = make_valid(geometries)
 
     return geometries
+
+def make_valid(geometries):
+    """
+    Applies the shapely .buffer(0) and make_valid (once released) trick to all
+    geometries. Should help resolve various topological issues in shapefiles.
+    """
+    return geometries["geometry"].simplify(0).buffer(0)
     
 def remove_repeated_vertices(geometries):
     """
