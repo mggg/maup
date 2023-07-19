@@ -1,14 +1,10 @@
-import math
 import pandas
 import functools
 import warnings
 
-from geopandas import GeoSeries, GeoDataFrame
+from geopandas import GeoSeries
 from shapely.geometry import MultiPolygon, Polygon
 from shapely.ops import unary_union
-# from shapely.validation import make_valid # currently in alpha
-# UPDATE: make_valid exists in shapely 2.0.1 with minimum GEOS 3.8.0,
-# so import it here:
 from shapely import make_valid 
 
 from .adjacencies import adjacencies
@@ -33,7 +29,6 @@ def holes_of_union(geometries):
     if not all(
         isinstance(geometry, (Polygon, MultiPolygon)) for geometry in geometries
     ):
-# Changed "type(x) to "x.geom_type"
         raise TypeError(f"Must be a Polygon or MultiPolygon (got types {set([x.geom_type for x in geometries])})!")
 
     union = unary_union(geometries)
@@ -190,9 +185,6 @@ def expand_to(source, target):
     return geometries
 
 
-
-# Changing assertions to truth checks so doctor can give a complete report instead of 
-# stopping at the first problem.
 def doctor(source, target=None):
     """
     Detects quality issues in a given set of source and target geometries. Quality
@@ -204,71 +196,33 @@ def doctor(source, target=None):
     shapefiles = [source]
     source_union = unary_union(get_geometries(source))
 
-# Adding "health_check" variable to return instead of using assertions.
-    health_check = True
-
     if target is not None:
         shapefiles.append(target)
 
         target_union = unary_union(get_geometries(target))
         sym_area = target_union.symmetric_difference(source_union).area
 
-        if sym_area != 0:
-            print("The unions of target and source differ!")
-            health_check = False
-#        assert sym_area == 0, "The unions of target and source differ!"
+        assert sym_area == 0, "The unions of target and source differ!"
 
     for shp in shapefiles:
-# Changing "shp["geometry"]" to "shp.geometry" so it will work for both GeoSeries and
-# GeoDataFrames,and also changing the assertion behavior.
-        if not shp.geometry.apply(lambda x: isinstance(x, (Polygon, MultiPolygon))).all():
-            print("Some rows do not have geometries.")
-            health_check = False
-#        assert shp["geometry"].apply(lambda x: isinstance(x, (Polygon, MultiPolygon))).all(), "Some rows do not have geometries"
+        assert shp["geometry"].apply(lambda x: isinstance(x, (Polygon, MultiPolygon))).all(), "Some rows do not have geometries"
 
         overlaps = count_overlaps(shp)
         holes = len(holes_of_union(shp))
 
-        if overlaps != 0:
-            print("There are", overlaps, "overlaps.")
-            health_check = False
-        if holes != 0:
-            print("There are", holes, "holes.")
-            health_check = False
-        if not shp.is_valid.all():
-            print("There are some invalid geometries.")
-            health_check = False
-            
+        assert overlaps == 0, f"There are {overlaps} overlaps!"
+        assert holes == 0, f"There are {holes} holes!"
+        assert shp.is_valid.all(), "There are some invalid geometries!"
 
-#        assert overlaps == 0, f"There are {overlaps} overlaps!"
-#        assert holes == 0, f"There are {holes} holes!"
-#        assert shp.is_valid.all(), "There are some invalid geometries!"
-
-    return health_check
-#    return True
+    return True
 
 def count_overlaps(shp):
     """
     Counts overlaps. Code is taken directly from the resolve_overlaps function in maup.
     """
-# Changing "shp["geometry"]" to "shp.geometry" so it will work for both GeoSeries and
-# GeoDataFrames:
     inters = adjacencies(shp.geometry, warn_for_islands=False, warn_for_overlaps=False)
-#    inters = adjacencies(shp["geometry"], warn_for_islands=False, warn_for_overlaps=False)
-# Changing buffer(0) to make_valid:
-    overlaps = make_valid(inters[inters.area > 0])
-#    overlaps = inters[inters.area > 0].buffer(0)
+    overlaps = (inters[inters.area > 0]).buffer(0)
     return len(overlaps)
-    
-    
-# Adding an analogous function "count_holes" that can be used for reporting in an
-# expanded version of doctor.
-
-def count_holes(shp):
-    gaps = holes_of_union(shp.geometry)
-    return(len(gaps))
-    
-    
     
 
 def apply_func_to_polygon_parts(shape, func):
@@ -298,7 +252,6 @@ def split_by_level(series, multiindex):
         for i in range(multiindex.nlevels)
     )
 
-
 @require_same_crs
 def absorb_by_shared_perimeter(sources, targets, relative_threshold=None):
     if len(sources) == 0:
@@ -307,10 +260,7 @@ def absorb_by_shared_perimeter(sources, targets, relative_threshold=None):
     if len(targets) == 0:
         raise IndexError("targets must be nonempty")
 
-
-# Changing buffer(0) to make_valid
-    inters = make_valid(intersections(sources, targets, area_cutoff=None))
-#    inters = intersections(sources, targets, area_cutoff=None).buffer(0)
+    inters = intersections(sources, targets, area_cutoff=None).buffer(0)
     assignment = assign_to_max(inters.length)
 
     if relative_threshold is not None:
@@ -323,13 +273,6 @@ def absorb_by_shared_perimeter(sources, targets, relative_threshold=None):
         sources.groupby(assignment).apply(unary_union), crs=sources.crs,
     )
 
-# Note: this line produces a warning message when sources_to_absorb and targets
-# have different indices:
-# lib/python3.11/site-packages/geopandas/base.py:31: UserWarning: The indices of the two 
-# GeoSeries are different.
-# warn("The indices of the two GeoSeries are different.")
-# This difference in indices is expected since not all target geometries may have sources
-# to absorb, so it would be nice to remove this warning.
     result = targets.union(sources_to_absorb)
 
     # The .union call only returns the targets who had a corresponding
