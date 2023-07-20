@@ -220,9 +220,9 @@ py==1.10.0; python_version >= "3.6" and python_full_version < "3.0.0" or python_
 pydata-sphinx-theme==0.6.3; python_version >= "3.5" \
     --hash=sha256:32e0580ef985734d652eec2bf25e0995a330a9d4f76deaa353571ce8e180ab14 \
     --hash=sha256:f0fee20dc33fa5efa6b9be57368be760d236d8b9c1486b14ad1d17b7e7e0db04
-pygments==2.9.0; python_version >= "3.6" \
-    --hash=sha256:d66e804411278594d764fc69ec36ec13d9ae9147193a1740cd34d272ca383b8e \
-    --hash=sha256:a18f47b506a429f6f4b9df81bb02beab9ca21d0a5fee38ed15aef65f0545519f
+pygments==2.15.0; python_version >= "3.6" \
+    --hash=sha256:77a3299119af881904cd5ecd1ac6a66214b6e9bed1f2db16993b54adede64094 \
+    --hash=sha256:f7e36cffc4c517fbc252861b9a6e4644ca0e5abadf9a113c72d1358ad09b9500
 pyparsing==2.4.7; python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.4.0" and python_version >= "3.6" \
     --hash=sha256:ef9d7589ef3c200abe66653d3f1ab1033c3c419ae9b9bdb1240a85b024efc88b \
     --hash=sha256:c203ec8783bf771a155b207279b9bccb8dea02d8f0c9e5f8ead507bc3246ecc1
