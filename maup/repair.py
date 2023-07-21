@@ -87,7 +87,6 @@ def resolve_overlaps(geometries, relative_threshold=0.1):
     """
     geometries = get_geometries(geometries)
     inters = adjacencies(geometries, warn_for_islands=False, warn_for_overlaps=False)
-# Changing buffer(0) to make_valid
     overlaps = make_valid(inters[inters.area > 0])
 
     if relative_threshold is not None:
@@ -174,15 +173,11 @@ def expand_to(source, target):
     """
     Expands the source geometries to the target geometries.
     """
-# Changing simplify(0).buffer(0) to make_valid:
     geometries = make_valid(get_geometries(source))
-#    geometries = get_geometries(source).simplify(0).buffer(0)
 
     source_union = unary_union(geometries)
 
     leftover_geometries = get_geometries(target).apply(lambda x: x - source_union)
-# Added index_parts=False option to explode() to accommodate a FutureWarning in
-# geopandas
     leftover_geometries = leftover_geometries[~leftover_geometries.is_empty].explode(index_parts=False)
 
     geometries = absorb_by_shared_perimeter(
