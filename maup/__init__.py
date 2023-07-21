@@ -6,19 +6,6 @@ from .repair import close_gaps, autorepair, snap_to_grid, crop_to, doctor
 from .normalize import normalize
 from .progress_bar import progress
 
-# Moved the source for the import of make_valid from .repair to shapely since it lives
-# there now and the maup version should be removed.  (Also removing make_valid from the
-# __all__ list below.)
-from shapely import make_valid 
-
-# For the old autorepair functions, uncomment the following line, along with the 
-# corresponding line in the __all__ assignments below:
-
-# from .repair_old import close_gaps, resolve_overlaps, autorepair
-
-
-
-import geopandas
 
 # warn about https://github.com/geopandas/geopandas/issues/2199
 if geopandas.options.use_pygeos:
