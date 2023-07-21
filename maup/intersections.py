@@ -8,7 +8,6 @@ from .indices import get_geometries_with_range_index
 
 @require_same_crs
 
-# Added option to output result as GeoDataFrame instead of GeoSeries
 def intersections(sources, targets, output_type= "geoseries", area_cutoff=None):
     """Computes all of the nonempty intersections between two sets of geometries.
     By default, the returned `~geopandas.GeoSeries` will have a MultiIndex, where the 

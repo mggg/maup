@@ -30,4 +30,3 @@ __all__ = [
     "normalize",
     "progress"
 ]
-# + ["autorepair", "close_gaps", "resolve_overlaps"]
