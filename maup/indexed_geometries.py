@@ -1,6 +1,5 @@
 import pandas
 import geopandas
-# Added numpy import to handle output of STRtree query
 import numpy
 
 from shapely.prepared import prep
@@ -25,12 +24,12 @@ class IndexedGeometries:
         relevant_geometries = self.geometries.iloc[relevant_indices]
         return relevant_geometries
 
-    def intersections(self, geometry):  
+    def intersections(self, geometry):
         relevant_geometries = self.query(geometry)  
         intersections = relevant_geometries.intersection(geometry)
         return intersections[-(intersections.is_empty | intersections.isna())]
 
-    def covered_by(self, container):   
+    def covered_by(self, container):
         relevant_geometries = self.query(container)
         prepared_container = prep(container)
 
@@ -40,7 +39,7 @@ class IndexedGeometries:
             selected_geometries = relevant_geometries.apply(prepared_container.covers)
             return relevant_geometries[selected_geometries]
 
-    def assign(self, targets):  
+    def assign(self, targets):
         target_geometries = get_geometries(targets)
         groups = [
             self.covered_by(container).apply(lambda x: container_index)
