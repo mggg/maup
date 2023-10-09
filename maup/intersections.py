@@ -51,10 +51,7 @@ def intersections(sources, targets, output_type= "geoseries", area_cutoff=None):
         df = df[df.area > area_cutoff].reset_index(drop=True)
         geometries = geometries[geometries.area > area_cutoff]
 
-    if output_type == "geodataframe":
-        return df
-    else:
-        return geometries
+    return df if output_type == "geodataframe" else geometries
 
 
 def prorate(relationship, data, weights, aggregate_by="sum"):

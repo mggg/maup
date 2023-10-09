@@ -1,8 +1,9 @@
+import geopandas
 from .adjacencies import adjacencies
 from .assign import assign
 from .indexed_geometries import IndexedGeometries
 from .intersections import intersections, prorate
-from .repair import close_gaps, autorepair, snap_to_grid, crop_to, doctor
+from .repair import close_gaps, autorepair, snap_to_grid, crop_to, doctor, resolve_overlaps
 from .normalize import normalize
 from .progress_bar import progress
 
@@ -24,6 +25,7 @@ __all__ = [
     "prorate",
     "close_gaps",
     "autorepair",
+    "resolve_overlaps",
     "snap_to_grid",
     "crop_to",
     "doctor",
