@@ -133,14 +133,14 @@ def make_valid(geometries):
     Applies the shapely .buffer(0) and make_valid (once released) trick to all
     geometries. Should help resolve various topological issues in shapefiles.
     """
-    return geometries["geometry"].simplify(0).buffer(0)
+    return get_geometries(geometries).simplify(0).buffer(0)
     
 def remove_repeated_vertices(geometries):
     """
     Removes repeated vertices. Vertices are considered to be repeated if they
     appear consecutively, excluding the start and end points.
     """
-    return geometries.geometry.apply(lambda x: apply_func_to_polygon_parts(x, dedup_vertices))
+    return get_geometries(geometries).apply(lambda x: apply_func_to_polygon_parts(x, dedup_vertices))
 
 def snap_to_grid(geometries, n=-7):
     """
@@ -148,7 +148,7 @@ def snap_to_grid(geometries, n=-7):
     resolve floating point precision issues in shapefiles.
     """
     func = functools.partial(snap_polygon_to_grid, n=n)
-    return geometries.geometry.apply(lambda x: apply_func_to_polygon_parts(x, func))
+    return get_geometries(geometries).apply(lambda x: apply_func_to_polygon_parts(x, func))
 
 @require_same_crs
 def crop_to(source, target):

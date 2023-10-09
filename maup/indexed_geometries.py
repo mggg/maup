@@ -8,7 +8,9 @@ from .progress_bar import progress
 
 
 def get_geometries(geometries):
-    return getattr(geometries, "geometry", geometries)
+    if isinstance(geometries, geopandas.GeoDataFrame):
+        return getattr(geometries, "geometry", geometries)
+    return geometries
 
 
 class IndexedGeometries:
