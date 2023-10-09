@@ -27,9 +27,9 @@ def iter_adjacencies(geometries):
             yield (i, j), inter
 
 def adjacencies(
-    geometries, 
-    output_type="geoseries",
-    adjacency_type="rook", *, warn_for_overlaps=True, warn_for_islands=True
+    geometries,
+    adjacency_type="rook",
+    output_type="geoseries", *, warn_for_overlaps=True, warn_for_islands=True
 ):
     """Returns adjacencies between geometries.     
     The default return type is a
@@ -45,6 +45,7 @@ def adjacencies(
     if adjacency_type not in ["rook", "queen"]:
         raise ValueError('adjacency_type must be "rook" or "queen"')
 
+    orig_crs = geometries.crs
     geometries = get_geometries(geometries)
     geometries = make_valid(geometries)
     
@@ -55,12 +56,12 @@ def adjacencies(
         index, geoms = [[],[]]    
     
     if output_type == "geodataframe":
-        inters = GeoDataFrame({"neighbors" : index, "geometry" : geoms}, crs = geometries.crs)
+        inters = GeoDataFrame({"neighbors" : index, "geometry" : geoms})
     else:
-        inters = GeoSeries(geoms, index=index, crs=geometries.crs)
+        inters = GeoSeries(geoms, index=index)
 
     if adjacency_type == "rook":
-        inters = inters[inters.length > 0]
+        inters = inters[inters.length > 0].copy()
 
     if warn_for_overlaps:
         overlaps = inters[inters.area > 0]
@@ -83,4 +84,5 @@ def adjacencies(
                 IslandWarning,
             )
 
+    inters.crs = orig_crs
     return inters
