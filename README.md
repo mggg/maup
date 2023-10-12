@@ -3,7 +3,6 @@
 [![maup tests](https://github.com/mggg/maup/actions/workflows/tests.yaml/badge.svg)](https://github.com/mggg/maup/actions/workflows/tests.yaml)
 [![codecov](https://codecov.io/gh/mggg/maup/branch/master/graph/badge.svg)](https://codecov.io/gh/mggg/maup)
 [![PyPI](https://img.shields.io/pypi/v/maup.svg?color=%23)](https://pypi.org/project/maup/)
-[![conda-forge Package](https://img.shields.io/conda/vn/conda-forge/maup.svg?color=%230099cd)](https://anaconda.org/conda-forge/maup)
 
 `maup` is the geospatial toolkit for redistricting data. The package streamlines
 the basic workflows that arise when working with blocks, precincts, and
@@ -24,19 +23,6 @@ under the MIT License.
 
 ## Installation
 
-We recommend installing `maup` from [conda-forge](https://conda-forge.org/)
-using [conda](https://docs.conda.io/en/latest/):
-
-```console
-conda install -c conda-forge maup
-```
-
-You can get conda by installing
-[Miniconda](https://docs.conda.io/en/latest/miniconda.html), a free Python
-distribution made especially for data science and scientific computing. You
-might also consider [Anaconda](https://www.anaconda.com/distribution/), which
-includes many data science packages that you might find useful.
-
 To install `maup` from PyPI, run `pip install maup` from your terminal.
 
 For development, `maup` uses [Poetry](https://python-poetry.org/docs/basic-usage/).
@@ -48,15 +34,23 @@ Here are some basic situations where you might find `maup` helpful. For these
 examples, we use test data from Providence, Rhode Island, which you can find in
 our
 [Rhode Island shapefiles repo](https://github.com/mggg-states/RI-shapefiles), or
-in the `examples` folder of this repo.
+in the `examples` folder of this repo, reprojected to a non-geographic coordinate
+reference system (CRS) optimized
+for Rhode Island.
+
+** Many of maup's functions behave badly in geographic projections (i.e., lat/long 
+coordinates), which are the default for shapefiles from the U.S. Census bureau. In 
+order to find an appropriate CRS for a particular shapefile, consult the database
+at [https://epsg.org](https://epsg.org).**
+
 
 ```python
 >>> import geopandas
 >>> import pandas
 >>>
->>> blocks = geopandas.read_file("zip://./examples/blocks.zip")
->>> precincts = geopandas.read_file("zip://./examples/precincts.zip")
->>> districts = geopandas.read_file("zip://./examples/districts.zip")
+>>> blocks = geopandas.read_file("zip://./examples/blocks.zip").to_crs(32030)
+>>> precincts = geopandas.read_file("zip://./examples/precincts.zip").to_crs(32030)
+>>> districts = geopandas.read_file("zip://./examples/districts.zip").to_crs(32030)
 
 ```
 
@@ -72,10 +66,10 @@ is assigned to the target geometry that covers the largest portion of its area.
 ```python
 >>> import maup
 >>>
->>> assignment = maup.assign(precincts, districts)
+>>> precinct_to_district_assignment = maup.assign(precincts, districts)
 >>> # Add the assigned districts as a column of the `precincts` GeoDataFrame:
->>> precincts["DISTRICT"] = assignment
->>> assignment.head()
+>>> precincts["DISTRICT"] = precinct_to_district_assignment
+>>> precinct_to_district_assignment.head()
 0     7
 1     5
 2    13
@@ -85,7 +79,7 @@ dtype: int64
 
 ```
 
-As an aside, you can use that `assignment` object to create a
+As an aside, you can use that `precinct_to_district_assignment` object to create a
 [gerrychain](https://gerrychain.readthedocs.io/en/latest/) `Partition`
 representing this districting plan.
 
@@ -101,8 +95,8 @@ operation:
 ```python
 >>> variables = ["TOTPOP", "NH_BLACK", "NH_WHITE"]
 >>>
->>> assignment = maup.assign(blocks, precincts)
->>> precincts[variables] = blocks[variables].groupby(assignment).sum()
+>>> blocks_to_precincts_assignment = maup.assign(blocks, precincts)
+>>> precincts[variables] = blocks[variables].groupby(blocks_to_precincts_assignment).sum()
 >>> precincts[variables].head()
    TOTPOP  NH_BLACK  NH_WHITE
 0    5907       886       380
@@ -114,7 +108,7 @@ operation:
 ```
 
 If you want to move data from one set of geometries to another but your source
-and target geometries do not nest neatly (i.e. have overlaps), see
+and target geometries do not nest neatly (e.g., have overlaps), see
 [Prorating data when units do not nest neatly](#prorating-data-when-units-do-not-nest-neatly).
 
 ### Disaggregating data from precincts down to blocks
@@ -133,16 +127,19 @@ prorate by population (`"TOTPOP"`):
 
 ```python
 >>> election_columns = ["PRES16D", "PRES16R"]
->>> assignment = maup.assign(blocks, precincts)
+>>> blocks_to_precincts_assignment = maup.assign(blocks, precincts)
 >>>
 >>> # We prorate the vote totals according to each block's share of the overall
 >>> # precinct population:
->>> weights = blocks.TOTPOP / assignment.map(blocks.TOTPOP.groupby(assignment).sum())
->>> prorated = maup.prorate(assignment, precincts[election_columns], weights)
+>>> weights = blocks.TOTPOP / blocks_to_precincts_assignment.map(blocks.TOTPOP.groupby(blocks_to_precincts_assignment).sum())
+>>> prorated = maup.prorate(blocks_to_precincts_assignment, precincts[election_columns], weights)
 >>>
 >>> # Add the prorated vote totals as columns on the `blocks` GeoDataFrame:
 >>> blocks[election_columns] = prorated
->>> # We'll call .round(2) to round the values for display purposes.
+>>>
+>>> # We'll call .round(2) to round the values for display purposes, but note that the 
+>>> # actual values should NOT be rounded in order to avoid accumulation of rounding
+>>> # errors.
 >>> blocks[election_columns].round(2).head()
    PRES16D  PRES16R
 0     0.00     0.00
@@ -159,59 +156,148 @@ prorate by population (`"TOTPOP"`):
 **not** a good predictor of its population. In fact, the correlation goes in the
 other direction: larger census blocks are _less_ populous than smaller ones.
 
+#### Warnings about data anomalies
+
+(1) Many states contain Census blocks and precincts that have zero population. In the
+example above, a zero-population precinct leads to division by zero in the 
+definition of the weights, which results in NaN values for some entries.
+
+Although it is not strictly necessary to resolve this in the example above, sometimes
+this creates issues down the line.  One option is to replace NaN values with zeros, 
+using
+
+```python
+>>> weights = weights.fillna(0)
+```
+
+(2) In some cases, zero-population precincts may have a small nonzero number of recorded
+votes in some elections. The procedure outlined above will lose these votes in the 
+proration process due to the zero (or NaN) values for the weights corresponding to all
+the blocks in those precincts. If it is crucial to keep vote totals perfectly accurate, 
+these votes will need to be assigned to the new units manually.
+
 ### Prorating data when units do not nest neatly
 
 Suppose you have a shapefile of precincts with some election results data and
 you want to join that data onto a different, more recent precincts shapefile.
 The two sets of precincts will have overlaps, and will not nest neatly like the
 blocks and precincts did in the above examples. (Not that blocks and precincts
-always nest neatly...)
+always nest neatly---in fact, they usually don't!)
 
-We can use `maup.intersections` to break the two sets of precincts into pieces
-that nest neatly into both sets. Then we can disaggregate from the old precincts
-onto these pieces, and aggregate up from the pieces to the new precincts. This
-move is a bit complicated, so `maup` provides a function called `prorate` that
-does just that.
-
-We'll use our same `blocks` GeoDataFrame to estimate the populations of the
-pieces for the purposes of proration.
-
-For our "new precincts" shapefile, we'll use the VTD shapefile for Rhode Island
-that the U.S. Census Bureau produced as part of their 2018 test run of for the
-2020 Census.
+In most cases, election data should be prorated from each old precincts to the new
+precincts with weights proportional to the population of the intersections between
+the old precinct and each new precinct.  The most straightforward way to accomplish 
+this is to first disaggregate the data from the old precincts to Census blocks as in 
+the example above, and then reaggregate from blocks to the new precincts. 
 
 ```python
 >>> old_precincts = precincts
->>> new_precincts = geopandas.read_file("zip://./examples/new_precincts.zip")
+>>> new_precincts = geopandas.read_file("zip://./examples/new_precincts.zip").to_crs(32030)
 >>>
->>> columns = ["SEN18D", "SEN18R"]
+>>> election_columns = ["SEN18D", "SEN18R"]
 >>>
->>> # Include area_cutoff=0 to ignore any intersections with no area,
->>> # like boundary intersections, which we do not want to include in
->>> # our proration.
->>> pieces = maup.intersections(old_precincts, new_precincts, area_cutoff=0)
+>>> blocks_to_old_precincts_assignment = maup.assign(blocks, old_precincts)
+>>> blocks_to_new_precincts_assignment = maup.assign(blocks, new_precincts)
 >>>
->>> # Weight by prorated population from blocks
->>> weights = blocks["TOTPOP"].groupby(maup.assign(blocks, pieces)).sum()
->>> # Normalize the weights so that votes are allocated according to their
->>> # share of population in the old_precincts
->>> weights = maup.normalize(weights, level=0)
+>>> # We prorate the vote totals according to each block's share of the overall
+>>> # old precinct population:
+>>> weights = blocks.TOTPOP / blocks_to_old_precincts_assignment.map(blocks.TOTPOP.groupby(blocks_to_old_precincts_assignment).sum()).fillna(0)
+>>> prorated = maup.prorate(blocks_to_old_precincts_assignment, precincts[election_columns], weights)
 >>>
->>> # Use blocks to estimate population of each piece
->>> new_precincts[columns] = maup.prorate(
-...     pieces,
-...     old_precincts[columns],
-...     weights=weights
-... )
->>> new_precincts[columns].head()
-   SEN18D  SEN18R
-0   752.0    51.0
-1   370.0    21.0
-2    97.0    17.0
-3   585.0    74.0
-4   246.0    20.0
-
+>>> # Add the prorated vote totals as columns on the `blocks` GeoDataFrame:
+>>> blocks[election_columns] = prorated
+>>>
+>>> new_precincts[election_columns] = blocks[election_columns].groupby(blocks_to_new_precincts_assignment).sum()
+>>> new_precincts[election_columns].round(2).head()
+    SEN18D   SEN18R
+0   728.17    49.38
+1	370.00	  21.00
+2	 97.00	  17.00
+3	 91.16	   5.55
+4	246.00	  20.00
 ```
+
+As a sanity check, let's make sure that no votes were lost in either step.
+Total votes in the old precincts:
+```python
+>>> old_precincts[election_columns].sum()
+SEN18D    23401
+SEN18R     3302
+dtype: float64
+>>>
+>>> blocks[election_columns].sum()
+SEN18D    23401.0
+SEN18R     3302.0
+dtype: float64
+>>>
+>>> new_precincts[election_columns].sum()
+SEN18D    20565.656675
+SEN18R     2947.046857
+dtype: float64
+```
+
+Oh no - what happened??? All votes were successfully disaggregated to blocks, but a
+significant percentage were lost when reaggregating to new precincts.
+
+It turns out that when blocks were assigned to both old and new precincts, many blocks
+were not assigned to any precincts.  We can count how many blocks were unassigned in each
+case:
+
+```python
+print(len(blocks))
+print(blocks_to_old_precincts_assignment.isna().sum())
+print(blocks_to_new_precincts_assignment.isna().sum())
+3014
+884
+1227
+```
+
+So, out of 3,014 total Census blocks, 884 were not assigned to any old precinct and 
+1,227 were not assigned to any new precinct.  If we plot the shapefiles, we can see why:
+```python
+>>> blocks.plot()
+```
+
+![Providence blocks](./examples/Providence_blocks_plot.png)
+
+```python
+>>> old_precincts.plot()
+```
+
+![Providence old precincts](./examples/Providence_old_precincts_plot.png)
+
+```python
+>>> new_precincts.plot()
+```
+
+![Providence new precincts](./examples/Providence_new_precincts_plot.png)
+
+The boundaries of the regions covered by these shapefiles are substantially 
+different---and that doesn't even get into the possibility that the precinct shapefiles
+may have gaps between precinct polygons that some blocks may fall into.
+
+Once we know to look for this issue, we can see that it affected the previous example 
+as well:
+```python
+>>> blocks[variables].sum()
+TOTPOP      178040
+NH_BLACK     23398
+NH_WHITE     66909
+dtype: int64
+>>>
+>>> precincts[variables].sum()
+TOTPOP      140332
+NH_BLACK     19345
+NH_WHITE     46667
+dtype: int64
+```
+
+#### Moral: Precinct shapefiles often have _terrible_ topological issues!
+These issues should be diagnosed and repaired to the greatest extent possible before
+moving data around between shapefiles; see
+[Fixing topological issues, overlaps, and gaps](#fixing-topological-issues-overlaps-and-gaps)
+below for details about how maup can help with this.
+
 
 ### Progress bars
 
@@ -239,6 +325,7 @@ set `maup.progress.enabled = True`:
 >>> pieces = maup.intersections(old_precincts, new_precincts, area_cutoff=0)
 
 ```
+
 ### Fixing topological issues, overlaps, and gaps
 
 Precinct shapefiles are often created by stitching together collections of
