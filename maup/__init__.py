@@ -1,12 +1,12 @@
+import geopandas
 from .adjacencies import adjacencies
 from .assign import assign
 from .indexed_geometries import IndexedGeometries
 from .intersections import intersections, prorate
-from .repair import close_gaps, resolve_overlaps, make_valid, autorepair, snap_to_grid, crop_to, expand_to, doctor
+from .repair import close_gaps, autorepair, snap_to_grid, crop_to, doctor, resolve_overlaps
 from .normalize import normalize
 from .progress_bar import progress
 
-import geopandas
 
 # warn about https://github.com/geopandas/geopandas/issues/2199
 if geopandas.options.use_pygeos:
@@ -18,17 +18,17 @@ if geopandas.options.use_pygeos:
 
 __version__ = "1.0.8"
 __all__ = [
+    "adjacencies",
     "assign",
+    "IndexedGeometries",
     "intersections",
     "prorate",
-    "adjacencies",
     "close_gaps",
+    "autorepair",
     "resolve_overlaps",
     "snap_to_grid",
-    "IndexedGeometries",
+    "crop_to",
+    "doctor",
     "normalize",
-    "progress",
-    "make_valid",
-    "autorepair",
-    "doctor"
+    "progress"
 ]

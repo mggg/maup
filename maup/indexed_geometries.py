@@ -1,26 +1,33 @@
 import pandas
 import geopandas
+import numpy
+
 from shapely.prepared import prep
 from shapely.strtree import STRtree
 from .progress_bar import progress
 
 
 def get_geometries(geometries):
-    return getattr(geometries, "geometry", geometries)
+    if isinstance(geometries, geopandas.GeoDataFrame):
+        return getattr(geometries, "geometry", geometries)
+    return geometries
 
 
 class IndexedGeometries:
     def __init__(self, geometries):
         self.geometries = get_geometries(geometries)
         self.spatial_index = STRtree(self.geometries)
+        self.index = self.geometries.index
 
-    def query(self, geometry):
-        relevant_indices = [index for index in self.spatial_index.query(geometry)]
+
+    def query(self, geometry):  
+        relevant_index_array = self.spatial_index.query(geometry)
+        relevant_indices = [*set(numpy.ndarray.flatten(relevant_index_array))]
         relevant_geometries = self.geometries.iloc[relevant_indices]
         return relevant_geometries
 
     def intersections(self, geometry):
-        relevant_geometries = self.query(geometry)
+        relevant_geometries = self.query(geometry)  
         intersections = relevant_geometries.intersection(geometry)
         return intersections[-(intersections.is_empty | intersections.isna())]
 
@@ -43,9 +50,10 @@ class IndexedGeometries:
             )
         ]
         if groups:
-            return pandas.concat(groups).reindex(self.geometries.index)
+            return pandas.concat(groups).reindex(self.index)
         else:
             return geopandas.GeoSeries()
+
 
     def enumerate_intersections(self, targets):
         target_geometries = get_geometries(targets)

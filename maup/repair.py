@@ -1,12 +1,11 @@
-import math
 import pandas
 import functools
 import warnings
 
-from geopandas import GeoSeries, GeoDataFrame
+from geopandas import GeoSeries
 from shapely.geometry import MultiPolygon, Polygon
 from shapely.ops import unary_union
-# from shapely.validation import make_valid # currently in alpha
+from shapely import make_valid 
 
 from .adjacencies import adjacencies
 from .assign import assign_to_max
@@ -30,7 +29,7 @@ def holes_of_union(geometries):
     if not all(
         isinstance(geometry, (Polygon, MultiPolygon)) for geometry in geometries
     ):
-        raise TypeError(f"Must be a Polygon or MultiPolygon (got types {set([type(x) for x in geometries])})!")
+        raise TypeError(f"Must be a Polygon or MultiPolygon (got types {set([x.geom_type for x in geometries])})!")
 
     union = unary_union(geometries)
     series = holes(union)
@@ -51,6 +50,8 @@ def holes(geometry):
         return GeoSeries([Polygon(list(hole.coords)) for hole in geometry.interiors])
     else:
         raise TypeError("geometry must be a Polygon or MultiPolygon to have holes")
+
+
 
 
 def close_gaps(geometries, relative_threshold=0.1):
@@ -86,7 +87,7 @@ def resolve_overlaps(geometries, relative_threshold=0.1):
     """
     geometries = get_geometries(geometries)
     inters = adjacencies(geometries, warn_for_islands=False, warn_for_overlaps=False)
-    overlaps = inters[inters.area > 0].buffer(0)
+    overlaps = make_valid(inters[inters.area > 0])
 
     if relative_threshold is not None:
         left_areas, right_areas = split_by_level(geometries.area, overlaps.index)
@@ -116,31 +117,30 @@ def autorepair(geometries, relative_threshold=0.1):
     basis. Set `relative_threshold=None` to attempt to resolve all overlaps. See
     `resolve_overlaps()` and `close_gaps()` for more.
     """
-    shp = geometries.copy()
+    geometries = get_geometries(geometries)
 
-    shp["geometry"] = remove_repeated_vertices(shp)
-    shp["geometry"] = make_valid(shp)
-    shp["geometry"] = resolve_overlaps(shp, relative_threshold=relative_threshold)
-    shp["geometry"] = make_valid(shp)
-    shp["geometry"] = close_gaps(shp, relative_threshold=relative_threshold)
-    shp["geometry"] = make_valid(shp)
+    geometries = remove_repeated_vertices(geometries)
+    geometries = make_valid(geometries)
+    geometries = resolve_overlaps(geometries, relative_threshold=relative_threshold)
+    geometries = make_valid(geometries)
+    geometries = close_gaps(geometries, relative_threshold=relative_threshold)
+    geometries = make_valid(geometries)
 
-    return shp["geometry"]
+    return geometries
 
 def make_valid(geometries):
     """
     Applies the shapely .buffer(0) and make_valid (once released) trick to all
     geometries. Should help resolve various topological issues in shapefiles.
     """
-    return geometries["geometry"].simplify(0).buffer(0)
-    # return geometries["geometry"].buffer(0).apply(lambda x: make_valid(x))
-
+    return get_geometries(geometries).simplify(0).buffer(0)
+    
 def remove_repeated_vertices(geometries):
     """
     Removes repeated vertices. Vertices are considered to be repeated if they
     appear consecutively, excluding the start and end points.
     """
-    return geometries["geometry"].apply(lambda x: apply_func_to_polygon_parts(x, dedup_vertices))
+    return get_geometries(geometries).apply(lambda x: apply_func_to_polygon_parts(x, dedup_vertices))
 
 def snap_to_grid(geometries, n=-7):
     """
@@ -148,7 +148,7 @@ def snap_to_grid(geometries, n=-7):
     resolve floating point precision issues in shapefiles.
     """
     func = functools.partial(snap_polygon_to_grid, n=n)
-    return geometries["geometry"].apply(lambda x: apply_func_to_polygon_parts(x, func))
+    return get_geometries(geometries).apply(lambda x: apply_func_to_polygon_parts(x, func))
 
 @require_same_crs
 def crop_to(source, target):
@@ -173,18 +173,19 @@ def expand_to(source, target):
     """
     Expands the source geometries to the target geometries.
     """
-    geometries = get_geometries(source).simplify(0).buffer(0)
+    geometries = make_valid(get_geometries(source))
 
     source_union = unary_union(geometries)
 
     leftover_geometries = get_geometries(target).apply(lambda x: x - source_union)
-    leftover_geometries = leftover_geometries[~leftover_geometries.is_empty].explode()
+    leftover_geometries = leftover_geometries[~leftover_geometries.is_empty].explode(index_parts=False)
 
     geometries = absorb_by_shared_perimeter(
         leftover_geometries, get_geometries(source), relative_threshold=None
     )
 
     return geometries
+
 
 def doctor(source, target=None):
     """
@@ -221,9 +222,10 @@ def count_overlaps(shp):
     """
     Counts overlaps. Code is taken directly from the resolve_overlaps function in maup.
     """
-    inters = adjacencies(shp["geometry"], warn_for_islands=False, warn_for_overlaps=False)
-    overlaps = inters[inters.area > 0].buffer(0)
+    inters = adjacencies(shp.geometry, warn_for_islands=False, warn_for_overlaps=False)
+    overlaps = (inters[inters.area > 0]).buffer(0)
     return len(overlaps)
+    
 
 def apply_func_to_polygon_parts(shape, func):
     if isinstance(shape, Polygon):
@@ -251,7 +253,6 @@ def split_by_level(series, multiindex):
         multiindex.get_level_values(i).to_series(index=multiindex).map(series)
         for i in range(multiindex.nlevels)
     )
-
 
 @require_same_crs
 def absorb_by_shared_perimeter(sources, targets, relative_threshold=None):
