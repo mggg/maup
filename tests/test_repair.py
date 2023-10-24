@@ -26,8 +26,9 @@ def test_example_resolve_overlaps_repair_MI():
 def test_example_autorepair_MI():
     shp = geopandas.read_file("zip://./examples/MI.zip") # MI shapefile
 
-    with pytest.raises((TypeError, AssertionError)):
-        maup.doctor(shp)
+    # Changed behavior of doctor function so it no longer throws up errors here.
+    #with pytest.raises((TypeError, AssertionError)):
+    #    maup.doctor(shp)
 
     assert count_overlaps(shp) > 0
     holes = maup.repair.holes_of_union(shp)
@@ -97,4 +98,3 @@ def test_crop_to():
 def test_apply_func_error():
     with pytest.raises(TypeError):
         maup.repair.apply_func_to_polygon_parts("not a Polygon object", lambda x: x)
-
