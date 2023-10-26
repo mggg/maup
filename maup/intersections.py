@@ -8,23 +8,30 @@ from .indices import get_geometries_with_range_index
 
 @require_same_crs
 
-def intersections(sources, targets, output_type= "geoseries", area_cutoff=None):
-    """Computes all of the nonempty intersections between two sets of geometries.
+def intersections(sources, targets, output_type="geoseries", area_cutoff=None):
+    """
+    Computes all of the nonempty intersections between two sets of geometries.
+    
     By default, the returned `~geopandas.GeoSeries` will have a MultiIndex, where the 
-    geometry at index *(i, j)* is the intersection of ``sources[i]`` and ``targets[j]``
+    geometry at index *(i, j)* is the intersection of ``sources[i]`` and ``targets[j]`` 
     (if it is not empty).  
+    
     If output_type == "geodataframe", the return type is a range-indexed GeoDataFrame
     with "source" and "target" columns containing the indices i,j, respectively, for the 
-    intersection of ``sources[i]`` and ``targets[j]``
+    intersection of ``sources[i]`` and ``targets[j]``.
+    
     :param sources: geometries
     :type sources: :class:`~geopandas.GeoSeries` or :class:`~geopandas.GeoDataFrame`
     :param targets: geometries
     :type targets: :class:`~geopandas.GeoSeries` or :class:`~geopandas.GeoDataFrame`
-    :rtype: :class:`~geopandas.GeoSeries`
+    :param output_type: type of output, "geoseries" or "geodataframe"
+    :type output_type: str
     :param area_cutoff: (optional) if provided, only return intersections with
         area greater than ``area_cutoff``
     :type area_cutoff: Number or None
+    :rtype: :class:`~geopandas.GeoSeries` or :class:`~geopandas.GeoDataFrame`
     """
+
     
     reindexed_sources = get_geometries_with_range_index(sources)
     reindexed_targets = get_geometries_with_range_index(targets)
