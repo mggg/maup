@@ -1,6 +1,7 @@
 import geopandas as gp
 import pytest
 from shapely.geometry import Polygon
+import pandas as pd
 import maup
 
 CRS = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
@@ -89,8 +90,9 @@ def square_mostly_in_top_left():
 def squares_some_neat_some_overlapping(
     square_mostly_in_top_left, squares_within_four_square_grid
 ):
-    result = squares_within_four_square_grid.append(
-        square_mostly_in_top_left, ignore_index=True
+    result = pd.concat(
+        [squares_within_four_square_grid, square_mostly_in_top_left],
+        ignore_index=True,
     )
     result.crs = CRS
     return result
