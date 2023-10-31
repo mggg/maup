@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "maup"
-version = "1.1.1"
+version = "1.1.2"
 description = "The geospatial toolkit for redistricting data"
 authors = [
     "Metric Geometry and Gerrymandering Group <engineering@mggg.org>",
@@ -23,7 +23,7 @@ exclude = ["examples/", "tests/"]
 python = "^3.9.0,<3.13.0"
 numpy = "^1.23.0"
 pandas = "^2.1.2"
-geopandas = "^0.12.2"
+geopandas = "^0.14.0"
 Shapely = "^2.0.1"
 tqdm = "^4.61.1"
 
