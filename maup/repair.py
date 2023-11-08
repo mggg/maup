@@ -5,6 +5,7 @@ import warnings
 
 from geopandas import GeoSeries, GeoDataFrame
 from shapely.geometry import MultiPolygon, Polygon
+from shapely.geometry.collection import GeometryCollection
 from shapely.ops import unary_union
 from shapely import make_valid 
 
@@ -122,24 +123,31 @@ def resolve_overlaps(geometries, relative_threshold=0.1):
         overlaps, with_overlaps_removed, relative_threshold=None
     )
 
-def autorepair(geometries, relative_threshold=0.1):
+def autorepair(geometries, relative_threshold=0.1, force_polygons=False):
     """
-    Applies all the tricks in `maup.repair` with default args. Should work by default.
+    Applies all the tricks in `maup.repair` with default args. Additional
+    optional argument provided that can drop any fragmented line segments that
+    may occur while using shapely's make valid function. Should work by default.
     The default `relative_threshold` is `0.1`. This default is chosen to include
     tiny overlaps that can be safely auto-fixed while preserving major overlaps
     that might indicate deeper issues and should be handled on a case-by-case
     basis. Set `relative_threshold=None` to attempt to resolve all overlaps. See
     `resolve_overlaps()` and `close_gaps()` for more.
     """
-    orig_crs = geometries.crs
+
     geometries = get_geometries(geometries)
 
-    geometries = remove_repeated_vertices(geometries).make_valid()
-    geometries = resolve_overlaps(geometries, relative_threshold=relative_threshold).make_valid()    
-    geometries = close_gaps(geometries, relative_threshold=relative_threshold).make_valid()
-    
+    if force_polygons:
+        geometries = remove_repeated_vertices(geometries).map(make_valid_polygons_only)
+        geometries = resolve_overlaps(geometries, relative_threshold=relative_threshold).map(make_valid_polygons_only)
+        geometries = close_gaps(geometries, relative_threshold=relative_threshold).map(make_valid_polygons_only)
+    else:
+        geometries = remove_repeated_vertices(geometries).make_valid()
+        geometries = resolve_overlaps(geometries, relative_threshold=relative_threshold).make_valid()    
+        geometries = close_gaps(geometries, relative_threshold=relative_threshold).make_valid()
+
     return geometries
-    
+
 
 def remove_repeated_vertices(geometries):
     """
@@ -156,6 +164,20 @@ def snap_to_grid(geometries, n=-7):
     """
     func = functools.partial(snap_polygon_to_grid, n=n)
     return geometries.geometry.apply(lambda x: apply_func_to_polygon_parts(x, func))
+
+
+def make_valid_polygons_only(value):
+    """Converts invalid geometries, but also ensures that the results won't be
+    geometry collections with mixed types by filtering out non-polygons.
+    """
+    value = make_valid(value)
+    if isinstance(value, GeometryCollection):
+        # List comprehension excluding non-Polygons
+        value = [item for item in value.geoms
+                 if isinstance(item, (Polygon, MultiPolygon))]
+        # Aggregegating multiple Polygons into single MultiPolygon object.
+        value = value[0] if len(value) == 1 else MultiPolygon(value)
+    return value
 
 
 @require_same_crs
