@@ -7,7 +7,6 @@ from geopandas import GeoSeries, GeoDataFrame
 from shapely.geometry import MultiPolygon, Polygon
 from shapely.geometry.collection import GeometryCollection
 from shapely.ops import unary_union
-from shapely import make_valid 
 
 from .adjacencies import adjacencies
 from .assign import assign_to_max
@@ -36,6 +35,28 @@ check_shapefile_connectivity.py script in @gerrymandr/Preprocessing.
 
 class AreaCroppingWarning(UserWarning):
     pass
+
+
+def make_valid(geometries, force_polygons=False):
+    """Extended make valid function with optional filter for non polygonal
+    data from the output."""
+    geometries = geometries.make_valid()
+    if force_polygons:
+        geometries = geometries.map(trim_valid)
+    return geometries
+
+
+def trim_valid(value):
+    """Ensures that the results from the "make_valid" method won't be
+    geometry collections with mixed types by filtering out non-polygons.
+    """
+    if isinstance(value, GeometryCollection):
+        # List comprehension excluding non-Polygons
+        value = [item for item in value.geoms
+                 if isinstance(item, (Polygon, MultiPolygon))]
+        # Re-aggregegating multiple Polygons into single MultiPolygon object.
+        value = value[0] if len(value) == 1 else MultiPolygon(value)
+    return value
 
 
 def holes_of_union(geometries):
@@ -69,7 +90,7 @@ def holes(geometry):
 
 
 
-def close_gaps(geometries, relative_threshold=0.1):
+def close_gaps(geometries, relative_threshold=0.1, force_polygons=False):
     """Closes gaps between geometries by assigning the hole to the polygon
     that shares the most perimeter with the hole.
 
@@ -79,15 +100,18 @@ def close_gaps(geometries, relative_threshold=0.1):
     gaps while closing the tiny gaps that can occur as artifacts of
     geospatial operations. Set `relative_threshold=None` to attempt close all
     gaps. Due to floating point precision issues, all gaps may not be closed.
+
+    Optional "force_polygons" argument included to apply an automatic filter
+    non-polygonal fragments during operation.
     """
     geometries = get_geometries(geometries)
     gaps = holes_of_union(geometries)
     return absorb_by_shared_perimeter(
-        gaps, geometries, relative_threshold=relative_threshold
+        gaps, geometries, relative_threshold=relative_threshold, force_polygons=force_polygons
     )
 
 
-def resolve_overlaps(geometries, relative_threshold=0.1):
+def resolve_overlaps(geometries, relative_threshold=0.1, force_polygons=False):
     """For any pair of overlapping geometries, assigns the overlapping area to the
     geometry that shares the most perimeter with the overlap. Returns the GeoSeries
     of geometries, which will have no overlaps.
@@ -99,11 +123,14 @@ def resolve_overlaps(geometries, relative_threshold=0.1):
     that might indicate deeper issues and should be handled on a case-by-case
     basis. Set `relative_threshold=None` to attempt to resolve all overlaps. Due
     to floating point precision issues, all overlaps may not be resolved.
+
+    Optional "force_polygons" argument included to apply an automatic filter
+    non-polygonal fragments during operation.
     """
     geometries = get_geometries(geometries)
     inters = adjacencies(geometries, warn_for_islands=False, warn_for_overlaps=False)
-    overlaps = inters[inters.area > 0].make_valid()
-   
+    overlaps = make_valid(inters[inters.area > 0], force_polygons)
+
     if relative_threshold is not None:
         left_areas, right_areas = split_by_level(geometries.area, overlaps.index)
         under_threshold = ((overlaps.area / left_areas) < relative_threshold) & (
@@ -120,7 +147,7 @@ def resolve_overlaps(geometries, relative_threshold=0.1):
     with_overlaps_removed = geometries.apply(lambda x: x.difference(unary_union(to_remove)))
 
     return absorb_by_shared_perimeter(
-        overlaps, with_overlaps_removed, relative_threshold=None
+        overlaps, with_overlaps_removed, relative_threshold=None, force_polygons=force_polygons
     )
 
 def autorepair(geometries, relative_threshold=0.1, force_polygons=False):
@@ -137,14 +164,15 @@ def autorepair(geometries, relative_threshold=0.1, force_polygons=False):
 
     geometries = get_geometries(geometries)
 
-    if force_polygons:
-        geometries = remove_repeated_vertices(geometries).map(make_valid_polygons_only)
-        geometries = resolve_overlaps(geometries, relative_threshold=relative_threshold).map(make_valid_polygons_only)
-        geometries = close_gaps(geometries, relative_threshold=relative_threshold).map(make_valid_polygons_only)
-    else:
-        geometries = remove_repeated_vertices(geometries).make_valid()
-        geometries = resolve_overlaps(geometries, relative_threshold=relative_threshold).make_valid()    
-        geometries = close_gaps(geometries, relative_threshold=relative_threshold).make_valid()
+    geometries = make_valid(remove_repeated_vertices(geometries),
+                            force_polygons)
+    geometries = make_valid(resolve_overlaps(geometries,
+                                             relative_threshold=relative_threshold,
+                                             force_polygons=force_polygons),
+                            force_polygons)
+    geometries = make_valid(close_gaps(geometries,
+                                       relative_threshold=relative_threshold),
+                            force_polygons)
 
     return geometries
 
@@ -166,20 +194,6 @@ def snap_to_grid(geometries, n=-7):
     return geometries.geometry.apply(lambda x: apply_func_to_polygon_parts(x, func))
 
 
-def make_valid_polygons_only(value):
-    """Converts invalid geometries, but also ensures that the results won't be
-    geometry collections with mixed types by filtering out non-polygons.
-    """
-    value = make_valid(value)
-    if isinstance(value, GeometryCollection):
-        # List comprehension excluding non-Polygons
-        value = [item for item in value.geoms
-                 if isinstance(item, (Polygon, MultiPolygon))]
-        # Aggregegating multiple Polygons into single MultiPolygon object.
-        value = value[0] if len(value) == 1 else MultiPolygon(value)
-    return value
-
-
 @require_same_crs
 def crop_to(source, target):
     """
@@ -199,11 +213,11 @@ def crop_to(source, target):
     return cropped_geometries
 
 @require_same_crs
-def expand_to(source, target):
+def expand_to(source, target, force_polygons=False):
     """
     Expands the source geometries to the target geometries.
     """
-    geometries = get_geometries(source).make_valid()
+    geometries = make_valid(get_geometries(source), force_polygons)
 
     source_union = unary_union(geometries)
 
@@ -211,7 +225,7 @@ def expand_to(source, target):
     leftover_geometries = leftover_geometries[~leftover_geometries.is_empty].explode(index_parts=False)
 
     geometries = absorb_by_shared_perimeter(
-        leftover_geometries, get_geometries(source), relative_threshold=None
+        leftover_geometries, get_geometries(source), relative_threshold=None, force_polygons=force_polygons
     )
 
     return geometries
@@ -258,7 +272,7 @@ def doctor(source, target=None):
             health_check = False
         if not shp.is_valid.all():
             print("There are some invalid geometries.")
-            health_check = False            
+            health_check = False
 
     return health_check
 
@@ -270,12 +284,12 @@ def count_overlaps(shp):
     inters = adjacencies(shp.geometry, warn_for_islands=False, warn_for_overlaps=False)
     overlaps = inters[inters.area > 0].make_valid()
     return len(overlaps)
-    
-    
+
+
 def count_holes(shp):
     gaps = holes_of_union(shp.geometry)
     return(len(gaps))
-            
+
 
 def apply_func_to_polygon_parts(shape, func):
     if isinstance(shape, Polygon):
@@ -294,8 +308,8 @@ def dedup_vertices(polygon):
                 deduped_vertices.append(p)
             elif p != deduped_vertices[-1]:
                 deduped_vertices.append(p)
-        return Polygon(deduped_vertices)      
-          
+        return Polygon(deduped_vertices)
+
     else:
         deduped_vertices_exterior = []
         for c, p in enumerate(list(polygon.exterior.coords)):
@@ -303,7 +317,7 @@ def dedup_vertices(polygon):
                 deduped_vertices_exterior.append(p)
             elif p != deduped_vertices_exterior[-1]:
                 deduped_vertices_exterior.append(p)
-                
+
         deduped_vertices_interiors = []
         for interior_ring in polygon.interiors:
             deduped_vertices_this_ring = []
@@ -331,15 +345,15 @@ def split_by_level(series, multiindex):
 
 
 @require_same_crs
-def absorb_by_shared_perimeter(sources, targets, relative_threshold=None):
+def absorb_by_shared_perimeter(sources, targets, relative_threshold=None, force_polygons=False):
     if len(sources) == 0:
         return targets
 
     if len(targets) == 0:
         raise IndexError("targets must be nonempty")
 
-    inters = intersections(sources, targets, area_cutoff=None).make_valid()
-    
+    inters = make_valid(intersections(sources, targets, area_cutoff=None), force_polygons)
+
     assignment = assign_to_max(inters.length)
 
     if relative_threshold is not None:
@@ -352,13 +366,13 @@ def absorb_by_shared_perimeter(sources, targets, relative_threshold=None):
         sources.groupby(assignment).apply(unary_union), crs=sources.crs,
     )
 
-    # Note that the following line produces a warning message when sources_to_absorb 
+    # Note that the following line produces a warning message when sources_to_absorb
     # and targets have different indices:
-    
-    # "lib/python3.11/site-packages/geopandas/base.py:31: UserWarning: The indices of 
+
+    # "lib/python3.11/site-packages/geopandas/base.py:31: UserWarning: The indices of
     # the two GeoSeries are different.
     # warn("The indices of the two GeoSeries are different.")
-    
+
     # This difference in indices is expected since not all target geometries may have sources
     # to absorb, so it would be nice to remove this warning.
     result = targets.union(sources_to_absorb)
