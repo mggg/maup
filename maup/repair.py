@@ -42,7 +42,10 @@ def make_valid(geometries, force_polygons=False):
     data from the output."""
     geometries = geometries.make_valid()
     if force_polygons:
+        # Map function causes CRS information to be dropped.
+        srs = geometries.crs.srs
         geometries = geometries.map(trim_valid)
+        geometries = geometries.set_crs(srs)
     return geometries
 
 
@@ -353,7 +356,6 @@ def absorb_by_shared_perimeter(sources, targets, relative_threshold=None, force_
         raise IndexError("targets must be nonempty")
 
     inters = make_valid(intersections(sources, targets, area_cutoff=None), force_polygons)
-
     assignment = assign_to_max(inters.length)
 
     if relative_threshold is not None:
