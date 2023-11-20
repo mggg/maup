@@ -55,22 +55,26 @@ class IndexedGeometries:
             )
         ]
         if groups:
+            # New in pandas 2.1.2: Only concatenate Series of positive length
             groups = [group for group in groups if len(group) > 0]
-            groups_concat = pandas.concat(groups)
-            # No reindexing allowed with a non-unique Index,
-            # so we need to find and remove repetitions.  (This only happens when the
-            # targets have overlaps and some source is completely covered by more
-            # than one target.)
-            # Any that get removed here will be randomly assigned to one of the 
-            # covering units at the assign_by_area step by maup.assign.
-            groups_concat_index_list = list(groups_concat.index)
-            seen = set()
-            bad_indices = list(set([x for x in groups_concat_index_list if x in seen or seen.add(x)]))             
-            if len(bad_indices)>0:
-                groups_concat = groups_concat.drop(bad_indices)
-            return groups_concat.reindex(self.index)
+            if groups:
+                groups_concat = pandas.concat(groups)
+                # New in pandas 2.1.2: No reindexing allowed with a non-unique Index,
+                # so we need to find and remove repetitions.  (This only happens when the
+                # targets have overlaps and some source is completely covered by more
+                # than one target.)
+                # Any that get removed here will be randomly assigned to one of the 
+                # covering units at the assign_by_area step ub maup.assign.
+                groups_concat_index_list = list(groups_concat.index)
+                seen = set()
+                bad_indices = list(set([x for x in groups_concat_index_list if x in seen or seen.add(x)]))             
+                if len(bad_indices)>0:
+                    groups_concat = groups_concat.drop(bad_indices)
+                return groups_concat.reindex(self.index)
+            else:
+                return geopandas.GeoSeries().reindex(self.index)
         else:
-            return geopandas.GeoSeries()
+            return geopandas.GeoSeries().reindex(self.index)
 
 
     def enumerate_intersections(self, targets):
