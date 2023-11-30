@@ -1,12 +1,11 @@
-import math
-import pandas
 import functools
 import warnings
 
-from geopandas import GeoSeries, GeoDataFrame
-from shapely.geometry import MultiPolygon, Polygon
+import pandas
+
+from geopandas import GeoSeries
+from shapely.geometry import Polygon, MultiPolygon, LineString, MultiLineString
 from shapely.ops import unary_union
-from shapely import make_valid 
 
 from .adjacencies import adjacencies
 from .assign import assign_to_max
@@ -21,16 +20,18 @@ check_shapefile_connectivity.py script in @gerrymandr/Preprocessing.
 """
 
 # IMPORTANT TO BE AWARE OF FOR FUTURE UPDATES:
-# The old version of this file used buffer(0) to simplify geometries, but this only
+# A previous version of this file used buffer(0) to simplify geometries, but this only
 # works properly for polygons.  For 1-D objects such as LineStrings, it kills them off
-# completely - and this resulted in some pretty disastrous choices in the 
+# completely - and this resulted in some pretty disastrous choices in the
 # absorb_by_shared_perimeter function when ALL the perimeters simplified to zero and
 # the choice of which geometry to absorb into was essentially random!
 # In this version, buffer(0) has been replaced by Shapely 2.0's make_valid function,
-# which is MUCH better behaved - EXCEPT that when applied to a GeoSeries it apparently
-# removes the CRS - which then creates problems for functions that use @require_same_crs.
-# So here we need to be careful throughout to reassign the correct CRS to a GeoSeries
-# after applying the make_valid function.
+# which is MUCH better behaved - EXCEPT that when applied to a GeoSeries via
+# geoseries = make_valid(geoseries)
+# it apparently removes the CRS - which then creates problems for functions that use
+# @require_same_crs.
+# Note that it appears to work correctly if we use the format
+# geoseries = geoseries.make_valid()
 
 
 class AreaCroppingWarning(UserWarning):
@@ -52,6 +53,7 @@ def holes_of_union(geometries):
 
 
 def holes(geometry):
+    """Returns any holes in a Polygon or MultiPolygon."""
     if isinstance(geometry, MultiPolygon):
         return GeoSeries(
             [
@@ -66,11 +68,9 @@ def holes(geometry):
         raise TypeError("geometry must be a Polygon or MultiPolygon to have holes")
 
 
-
-
 def close_gaps(geometries, relative_threshold=0.1):
     """Closes gaps between geometries by assigning the hole to the polygon
-    that shares the most perimeter with the hole.
+    that shares the greatest perimeter with the hole.
 
     If the area of the gap is greater than `relative_threshold` times the
     area of the polygon, then the gap is left alone. The default value
@@ -88,7 +88,7 @@ def close_gaps(geometries, relative_threshold=0.1):
 
 def resolve_overlaps(geometries, relative_threshold=0.1):
     """For any pair of overlapping geometries, assigns the overlapping area to the
-    geometry that shares the most perimeter with the overlap. Returns the GeoSeries
+    geometry that shares the greatest perimeter with the overlap. Returns the GeoSeries
     of geometries, which will have no overlaps.
 
     If the ratio of the overlap's area to either of the overlapping geometries'
@@ -102,7 +102,7 @@ def resolve_overlaps(geometries, relative_threshold=0.1):
     geometries = get_geometries(geometries)
     inters = adjacencies(geometries, warn_for_islands=False, warn_for_overlaps=False)
     overlaps = inters[inters.area > 0].make_valid()
-   
+
     if relative_threshold is not None:
         left_areas, right_areas = split_by_level(geometries.area, overlaps.index)
         under_threshold = ((overlaps.area / left_areas) < relative_threshold) & (
@@ -122,24 +122,45 @@ def resolve_overlaps(geometries, relative_threshold=0.1):
         overlaps, with_overlaps_removed, relative_threshold=None
     )
 
-def autorepair(geometries, relative_threshold=0.1):
+
+def quick_repair(geometries, relative_threshold=0.1):
     """
-    Applies all the tricks in `maup.repair` with default args. Should work by default.
+    New name for autorepair function from Maup 1.x.
+    Uses simplistic algorithms to repair most gaps and overlaps.
+
     The default `relative_threshold` is `0.1`. This default is chosen to include
     tiny overlaps that can be safely auto-fixed while preserving major overlaps
     that might indicate deeper issues and should be handled on a case-by-case
     basis. Set `relative_threshold=None` to attempt to resolve all overlaps. See
     `resolve_overlaps()` and `close_gaps()` for more.
+
+    For a more careful repair that takes adjacencies and higher-order overlaps
+    between geometries into account, consider using smart_repair instead.
     """
-    orig_crs = geometries.crs
+    return autorepair(geometries, relative_threshold=relative_threshold)
+
+
+def autorepair(geometries, relative_threshold=0.1):
+    """
+    Uses simplistic algorithms to repair most gaps and overlaps.
+
+    The default `relative_threshold` is `0.1`. This default is chosen to include
+    tiny overlaps that can be safely auto-fixed while preserving major overlaps
+    that might indicate deeper issues and should be handled on a case-by-case
+    basis. Set `relative_threshold=None` to attempt to resolve all overlaps. See
+    `resolve_overlaps()` and `close_gaps()` for more.
+
+    For a more careful repair that takes adjacencies and higher-order overlaps
+    between geometries into account, consider using smart_repair instead.
+    """
     geometries = get_geometries(geometries)
 
     geometries = remove_repeated_vertices(geometries).make_valid()
-    geometries = resolve_overlaps(geometries, relative_threshold=relative_threshold).make_valid()    
+    geometries = resolve_overlaps(geometries, relative_threshold=relative_threshold).make_valid()
     geometries = close_gaps(geometries, relative_threshold=relative_threshold).make_valid()
-    
+
     return geometries
-    
+
 
 def remove_repeated_vertices(geometries):
     """
@@ -167,14 +188,15 @@ def crop_to(source, target):
     cropped_geometries = get_geometries(source).apply(lambda x: x.intersection(target_union))
 
     if (cropped_geometries.area == 0).any():
-        warnings.warn("Some cropped geometries have zero area, likely due to\n"+
-                      "large differences in the union of the geometries in your\n"+
-                      "source and target shapefiles. This may become an issue\n"+
+        warnings.warn("Some cropped geometries have zero area, likely due to\n" +
+                      "large differences in the union of the geometries in your\n" +
+                      "source and target shapefiles. This may become an issue\n" +
                       "when maupping.\n",
                       AreaCroppingWarning
-        )
+                      )
 
     return cropped_geometries
+
 
 @require_same_crs
 def expand_to(source, target):
@@ -195,19 +217,22 @@ def expand_to(source, target):
     return geometries
 
 
-
-def doctor(source, target=None):
+def doctor(source, target=None, silent=False, accept_holes=False):
     """
     Detects quality issues in a given set of source and target geometries. Quality
-    issues include overlaps, gaps, invalid geometries, repeated verticies, non-perfect
+    issues include overlaps, gaps, invalid geometries, non-perfect
     tiling, and not entirely overlapping source and targets. If `maup.doctor()` returns
     `True`, votes should not be lost when prorating or assigning (beyond a few due to
     rounding, etc.). Passing a target to doctor is optional.
+
+    If silent is True, then print outputs are suppressed. (Default is silent = False.)
+
+    If accept_holes is True, then holes alone do not cause doctor to return a value of
+    False. (Default is accept_holes = False.)
     """
     shapefiles = [source]
     source_union = unary_union(get_geometries(source))
 
-    # Adding "health_check" variable to return instead of using assertions.
     health_check = True
 
     if target is not None:
@@ -217,43 +242,53 @@ def doctor(source, target=None):
         sym_area = target_union.symmetric_difference(source_union).area
 
         if sym_area != 0:
-            print("The unions of target and source differ!")
+            if silent is False:
+                print("The unions of target and source differ!")
             health_check = False
 
     for shp in shapefiles:
         if not shp.geometry.apply(lambda x: isinstance(x, (Polygon, MultiPolygon))).all():
-            print("Some rows do not have geometries.")
+            if silent is False:
+                print("Some rows do not have geometries.")
             health_check = False
 
         overlaps = count_overlaps(shp)
-        holes = len(holes_of_union(shp))
+        num_holes = len(holes_of_union(shp))
 
         if overlaps != 0:
-            print("There are", overlaps, "overlaps.")
+            if silent is False:
+                print("There are", overlaps, "overlaps.")
             health_check = False
-        if holes != 0:
-            print("There are", holes, "holes.")
-            health_check = False
+        if num_holes != 0:
+            if silent is False:
+                print("There are", num_holes, "holes.")
+            if accept_holes is False:
+                health_check = False
         if not shp.is_valid.all():
-            print("There are some invalid geometries.")
-            health_check = False            
+            if silent is False:
+                print("There are some invalid geometries.")
+            health_check = False
 
     return health_check
 
 
 def count_overlaps(shp):
     """
-    Counts overlaps. Code is taken directly from the resolve_overlaps function in maup.
+    Counts overlaps between geometries.
+    Code is taken directly from the resolve_overlaps function in maup.
     """
     inters = adjacencies(shp.geometry, warn_for_islands=False, warn_for_overlaps=False)
     overlaps = inters[inters.area > 0].make_valid()
     return len(overlaps)
-    
-    
+
+
 def count_holes(shp):
+    """
+    Counts gaps between geometries.
+    """
     gaps = holes_of_union(shp.geometry)
-    return(len(gaps))
-            
+    return len(gaps)
+
 
 def apply_func_to_polygon_parts(shape, func):
     if isinstance(shape, Polygon):
@@ -272,8 +307,8 @@ def dedup_vertices(polygon):
                 deduped_vertices.append(p)
             elif p != deduped_vertices[-1]:
                 deduped_vertices.append(p)
-        return Polygon(deduped_vertices)      
-          
+        return Polygon(deduped_vertices)
+
     else:
         deduped_vertices_exterior = []
         for c, p in enumerate(list(polygon.exterior.coords)):
@@ -281,7 +316,7 @@ def dedup_vertices(polygon):
                 deduped_vertices_exterior.append(p)
             elif p != deduped_vertices_exterior[-1]:
                 deduped_vertices_exterior.append(p)
-                
+
         deduped_vertices_interiors = []
         for interior_ring in polygon.interiors:
             deduped_vertices_this_ring = []
@@ -290,15 +325,22 @@ def dedup_vertices(polygon):
                     deduped_vertices_this_ring.append(p)
                 elif p != deduped_vertices_this_ring[-1]:
                     deduped_vertices_this_ring.append(p)
-            deduped_vertices_interiors.append(deduped_vertices_this_ring)        
-        return Polygon(deduped_vertices_exterior, holes = deduped_vertices_interiors)
+            deduped_vertices_interiors.append(deduped_vertices_this_ring)
+        return Polygon(deduped_vertices_exterior, holes=deduped_vertices_interiors)
 
 
 def snap_polygon_to_grid(polygon, n=-7):
     if len(polygon.interiors) == 0:
         return Polygon([(round(x, -n), round(y, -n)) for x, y in polygon.exterior.coords])
     else:
-        return Polygon([(round(x, -n), round(y, -n)) for x, y in polygon.exterior.coords], holes = [[(round(x, -n), round(y, -n)) for x, y in interior_ring.coords] for interior_ring in polygon.interiors])
+        return Polygon([(round(x, -n), round(y, -n)) for x, y in polygon.exterior.coords], holes=[[(round(x, -n), round(y, -n)) for x, y in interior_ring.coords] for interior_ring in polygon.interiors])
+
+
+def snap_multilinestring_to_grid(multilinestring, n=-7):
+    if multilinestring.geom_type == "LineString":
+        return LineString([(round(x, -n), round(y, -n)) for x, y in multilinestring.coords])
+    elif multilinestring.geom_type == "MultiLineString":
+        return MultiLineString([LineString([(round(x, -n), round(y, -n)) for x, y in linestring.coords]) for linestring in multilinestring.geoms])
 
 
 def split_by_level(series, multiindex):
@@ -317,7 +359,7 @@ def absorb_by_shared_perimeter(sources, targets, relative_threshold=None):
         raise IndexError("targets must be nonempty")
 
     inters = intersections(sources, targets, area_cutoff=None).make_valid()
-    
+
     assignment = assign_to_max(inters.length)
 
     if relative_threshold is not None:
@@ -330,13 +372,13 @@ def absorb_by_shared_perimeter(sources, targets, relative_threshold=None):
         sources.groupby(assignment).apply(unary_union), crs=sources.crs,
     )
 
-    # Note that the following line produces a warning message when sources_to_absorb 
+    # Note that the following line produces a warning message when sources_to_absorb
     # and targets have different indices:
-    
-    # "lib/python3.11/site-packages/geopandas/base.py:31: UserWarning: The indices of 
+
+    # "lib/python3.11/site-packages/geopandas/base.py:31: UserWarning: The indices of
     # the two GeoSeries are different.
     # warn("The indices of the two GeoSeries are different.")
-    
+
     # This difference in indices is expected since not all target geometries may have sources
     # to absorb, so it would be nice to remove this warning.
     result = targets.union(sources_to_absorb)

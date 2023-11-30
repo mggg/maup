@@ -1,6 +1,6 @@
 import geopandas
 import maup
-from maup.repair import count_overlaps
+from maup.repair import count_overlaps, autorepair, quick_repair
 import pytest
 
 # These tests are losely based off the test_example_case in test_prorate.py
@@ -98,3 +98,7 @@ def test_crop_to():
 def test_apply_func_error():
     with pytest.raises(TypeError):
         maup.repair.apply_func_to_polygon_parts("not a Polygon object", lambda x: x)
+
+
+# def test_quick_repair_equals_autorepair():
+    
