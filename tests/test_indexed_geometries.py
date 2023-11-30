@@ -1,3 +1,4 @@
+import numpy as np
 from unittest.mock import patch
 
 from geopandas import GeoSeries
