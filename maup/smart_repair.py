@@ -859,34 +859,36 @@ def smart_close_gaps(geometries_df, holes_df):
                     boundary_distance_data = thb_distance_data_sorted.popleft()
                     boundaries_to_connect = (boundary_distance_data[0], boundary_distance_data[1])
 
-                    # Construct the shortest paths between
-                    # (1) initial points of both boundaries;
-                    # (2) terminal points of both boundaries.
-                    # These paths will intersect, generically at an interior point of
-                    # the hole but possibly at a vertex or along entire hole boundary
-                    # segments.  Generically, together with the two hole boundaries
-                    # they will form a pair of "triangles" that each share a boundary of
-                    # positive length with one of the two hole boundaries.  Whenever one
-                    # or both of these triangles has positive area, adjoin the one(s)
-                    # with positive area to the appropriate geometry.  This will create
-                    # one or two smaller holes - which already have convexified geometry
-                    # boundaries by construction! - and we put these back on the queue
-                    # for the next round.
-                    # Variation on this construction if one of
-                    # the boundaries is exterior (and in the rare case that BOTH
-                    # boundaries are exterior, skip this pair and go on to the next one):
-                    # Find the closest point on the exterior boundary to the non-exterior
-                    # geometry, construct a "triangle" by taking the shortest paths from
-                    # the endpoints of the non-exterior geometry to this point, and
-                    # (assuming it has positive area) adjoining it to the non-exterior
-                    # geometry.
-
                     nhb1 = this_hole_boundaries_df["geometry"][boundaries_to_connect[0]]
                     nhb2 = this_hole_boundaries_df["geometry"][boundaries_to_connect[1]]
                     geom1 = this_hole_boundaries_df["target"][boundaries_to_connect[0]]
                     geom2 = this_hole_boundaries_df["target"][boundaries_to_connect[1]]
 
+                    # Construct the shortest paths between
+                    # (1) initial points of both boundaries;
+                    # (2) terminal points of both boundaries.
+                    # These paths will intersect, possibly at a vertex or along entire
+                    # hole boundary segments, but generically---and provably for at
+                    # at leat one non-adjacent pair---at a single interior point of
+                    # the hole.
+                    # In the generic case, these paths together with the two
+                    # hole boundaries will form a pair of "triangles" that each share a
+                    # boundary of positive length with one of the two hole boundaries.
+                    # Find the closest pair that satisfy this generic intersection
+                    # condition and adjoin each of the triangles formed in this way
+                    # to its adjacent geometry.  This will create
+                    # two smaller holes - which already have convexified geometry
+                    # boundaries by construction! - and we put these back on the queue
+                    # for the next round.
+
                     if not (geom1 == -1 and geom2 == -1):
+                        # If one of the boundaries is exterior (and in the rare case that BOTH
+                        # boundaries are exterior, skip this pair and go on to the next one):
+                        # Find the closest point on the exterior boundary to the non-exterior
+                        # geometry, construct a "triangle" by taking the shortest paths from
+                        # the endpoints of the non-exterior geometry to this point, and
+                        # (assuming it has positive area) adjoining it to the non-exterior
+                        # geometry.
                         if geom1 == -1 or geom2 == -1:
                             if geom1 == -1:
                                 nhb_ext = nhb1
@@ -911,60 +913,72 @@ def smart_close_gaps(geometries_df, holes_df):
                                         this_hole = this_hole.difference(poly_to_add)
 
                         else:
+                            # Start by constructing the shortest paths between the initial point
+                            # of each boundary and the terminal point of the other.  If these
+                            # paths are disjoint, then this pair of boundaries is strongly
+                            # mutually visible and we want to connect them.  Otherwise,
+                            # skip this pair and move on to the next one.
                             point11 = nhb1.boundary.geoms[0]
                             point12 = nhb1.boundary.geoms[1]
                             point21 = nhb2.boundary.geoms[0]
                             point22 = nhb2.boundary.geoms[1]
-                            # Generally, we want paths between the two boundaries that cross
-                            # each other to form (generically) two "triangles."
-                            # An exception is when both boundaries target the same
-                            # geometry, in which case we want the paths to NOT cross in
-                            # order to preserve convexity of the geometry boundaries in the
-                            # new holes.
-                            if geom1 == geom2:
-                                path1 = LineString(shortest_path_in_polygon(this_hole, point11, point22, full_triangulation=this_hole_triangulation))
-                                path2 = LineString(shortest_path_in_polygon(this_hole, point12, point21, full_triangulation=this_hole_triangulation))
-                            else:
-                                path1 = LineString(shortest_path_in_polygon(this_hole, point11, point21, full_triangulation=this_hole_triangulation))
-                                path2 = LineString(shortest_path_in_polygon(this_hole, point12, point22, full_triangulation=this_hole_triangulation))
 
-                            polys_to_add_boundary = shapely.node(MultiLineString([nhb1, nhb2, path1, path2]))
-                            polys_to_add = polygonize(polys_to_add_boundary)
-                            if len(polys_to_add) > 0:
+                            test_path1_vertices = shortest_path_in_polygon(this_hole, point11, point22, full_triangulation=this_hole_triangulation)
+                            test_path2_vertices = shortest_path_in_polygon(this_hole, point12, point21, full_triangulation=this_hole_triangulation)
+                            if len(set(test_path1_vertices).intersection(set(test_path2_vertices))) == 0:
+                                # In this case we should be good to add triangles formed
+                                # by crossing paths between the initial and terminal
+                                # points between the two boundaries!
+                                # A minor exception is when both boundaries target the same
+                                # geometry, in which case we want the paths to NOT cross in
+                                # order to preserve convexity of the geometry boundaries in the
+                                # new holes, and we'll add a single polygon instead of a
+                                # pair of triangles.
+
+                                found_triangles = True
+
+                                if geom1 == geom2:
+                                    path1 = LineString(shortest_path_in_polygon(this_hole, point11, point22, full_triangulation=this_hole_triangulation))
+                                    path2 = LineString(shortest_path_in_polygon(this_hole, point12, point21, full_triangulation=this_hole_triangulation))
+                                else:
+                                    path1 = LineString(shortest_path_in_polygon(this_hole, point11, point21, full_triangulation=this_hole_triangulation))
+                                    path2 = LineString(shortest_path_in_polygon(this_hole, point12, point22, full_triangulation=this_hole_triangulation))
+
+                                polys_to_add_boundary = shapely.node(MultiLineString([nhb1, nhb2, path1, path2]))
+                                polys_to_add = polygonize(polys_to_add_boundary)
+                                # polys_to_add will consist of either 1 or 2 polygons,
+                                # each sharing a positive-length boundary witha unique geometry.
+                                # Add each polygon to the geometry that it shares a boundary with.
                                 nhb1_segments = segments(nhb1)
                                 nhb2_segments = segments(nhb2)
                                 for poly_to_add in polys_to_add:
-                                    if poly_to_add.area > 0:
-                                        poly_to_add = orient(poly_to_add)
-                                        # Cover all bases with both possible orientations for
-                                        # boundary segments, even though the proper orientation
-                                        # SHOULD always be correct.
-                                        poly_segments_oriented = segments(poly_to_add.boundary)
-                                        poly_segments_reverse = [shapely.reverse(segment) for segment in poly_segments_oriented]
-                                        poly_segments_all = poly_segments_oriented + poly_segments_reverse
-                                        if (len(set(nhb1_segments).intersection(set(poly_segments_all))) > 0) and (len(set(nhb2_segments).intersection(set(poly_segments_all))) == 0):
-                                            found_triangles = True
-                                            geometries_df["geometry"][geom1] = unary_union([geometries_df["geometry"][geom1], poly_to_add])
-                                            this_hole = this_hole.difference(poly_to_add)
+                                    poly_to_add = orient(poly_to_add)
+                                    # Cover all bases with both possible orientations for
+                                    # boundary segments, even though the proper orientation
+                                    # SHOULD always be correct.
+                                    poly_segments_oriented = segments(poly_to_add.boundary)
+                                    poly_segments_reverse = [shapely.reverse(segment) for segment in poly_segments_oriented]
+                                    poly_segments_all = set(poly_segments_oriented + poly_segments_reverse)
+                                    if (len(set(nhb1_segments).intersection(poly_segments_all)) > 0) and (len(set(nhb2_segments).intersection(poly_segments_all)) == 0):
+                                        geometries_df["geometry"][geom1] = unary_union([geometries_df["geometry"][geom1], poly_to_add])
+                                        this_hole = this_hole.difference(poly_to_add)
 
-                                        elif (len(set(nhb1_segments).intersection(set(poly_segments_all))) == 0) and (len(set(nhb2_segments).intersection(set(poly_segments_all))) > 0):
-                                            found_triangles = True
-                                            geometries_df["geometry"][geom2] = unary_union([geometries_df["geometry"][geom2], poly_to_add])
-                                            this_hole = this_hole.difference(poly_to_add)
+                                    elif (len(set(nhb1_segments).intersection(poly_segments_all)) == 0) and (len(set(nhb2_segments).intersection(poly_segments_all)) > 0):
+                                        geometries_df["geometry"][geom2] = unary_union([geometries_df["geometry"][geom2], poly_to_add])
+                                        this_hole = this_hole.difference(poly_to_add)
 
-                                        elif geom1 == geom2:
-                                            found_triangles = True
-                                            geometries_df["geometry"][geom1] = unary_union([geometries_df["geometry"][geom1], poly_to_add])
-                                            this_hole = this_hole.difference(poly_to_add)
+                                    elif geom1 == geom2:
+                                        geometries_df["geometry"][geom1] = unary_union([geometries_df["geometry"][geom1], poly_to_add])
+                                        this_hole = this_hole.difference(poly_to_add)
 
-                                        else:
-                                            print("Internal triangle construction went weird!")
-                                            print("Hole boundaries:")
-                                            for i in this_hole_boundaries_df.index:
-                                                print("Target:", this_hole_boundaries_df["target"][i])
-                                                print(list(this_hole_boundaries_df["geometry"][i].coords))
-                                            print("poly_to_add boundaries:")
-                                            print(list(poly_to_add.boundary.coords))
+                                    else:
+                                        print("Internal triangle construction went weird!")
+                                        print("Hole boundaries:")
+                                        for i in this_hole_boundaries_df.index:
+                                            print("Target:", this_hole_boundaries_df["target"][i])
+                                            print(list(this_hole_boundaries_df["geometry"][i].coords))
+                                        print("poly_to_add boundaries:")
+                                        print(list(poly_to_add.boundary.coords))
 
                 # Now put the new hole(s) created by removing triangles back in the queue:
                 if found_triangles and not this_hole.is_empty:
