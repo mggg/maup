@@ -3,10 +3,10 @@ from .adjacencies import adjacencies
 from .assign import assign
 from .indexed_geometries import IndexedGeometries
 from .intersections import intersections, prorate
-from .repair import close_gaps, autorepair, snap_to_grid, crop_to, doctor, resolve_overlaps
+from .repair import close_gaps, resolve_overlaps, quick_repair, snap_to_grid, crop_to, expand_to, doctor
+from .smart_repair import smart_repair
 from .normalize import normalize
 from .progress_bar import progress
-
 
 # warn about https://github.com/geopandas/geopandas/issues/2199
 if geopandas.options.use_pygeos:
@@ -16,7 +16,7 @@ if geopandas.options.use_pygeos:
         "`geopandas.options.use_pygeos = False` before importing your shapefile."
     )
 
-__version__ = "1.1.3"
+__version__ = "2.0.0"
 __all__ = [
     "adjacencies",
     "assign",
@@ -24,11 +24,13 @@ __all__ = [
     "intersections",
     "prorate",
     "close_gaps",
-    "autorepair",
     "resolve_overlaps",
+    "quick_repair",
     "snap_to_grid",
     "crop_to",
+    "expand_to",
     "doctor",
+    "smart_repair",
     "normalize",
     "progress"
 ]

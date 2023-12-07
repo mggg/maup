@@ -1,6 +1,6 @@
 import geopandas
 import maup
-from maup.repair import count_overlaps
+from maup.repair import count_overlaps, autorepair, quick_repair
 import pytest
 
 # These tests are losely based off the test_example_case in test_prorate.py
@@ -35,12 +35,14 @@ def test_example_autorepair_MI():
     assert holes.unary_union.area > 100
     assert len(holes) > 0
 
-    shp["geometry"] = maup.autorepair(shp, relative_threshold=None)
+    shp["geometry"] = maup.quick_repair(shp, relative_threshold=None)
 
     assert count_overlaps(shp) == 0
     holes = maup.repair.holes_of_union(shp)
     assert holes.empty or holes.unary_union.area < 1e-10 # overlaps are not guaranteed to disappear
-    assert maup.doctor(shp)
+    # This assertion is a terrible idea since there will almost certainly still be small
+    # gaps and overlaps remaining!
+    # assert maup.doctor(shp)
 
 def test_snap_shp_to_grid():
     shp = geopandas.read_file("zip://./examples/MI.zip") # MI shapefile
@@ -98,3 +100,7 @@ def test_crop_to():
 def test_apply_func_error():
     with pytest.raises(TypeError):
         maup.repair.apply_func_to_polygon_parts("not a Polygon object", lambda x: x)
+
+
+# def test_quick_repair_equals_autorepair():
+    

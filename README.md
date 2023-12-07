@@ -41,7 +41,7 @@ for Rhode Island.
 ** Many of maup's functions behave badly in geographic projections (i.e., lat/long 
 coordinates), which are the default for shapefiles from the U.S. Census bureau. In 
 order to find an appropriate CRS for a particular shapefile, consult the database
-at [https://epsg.org](https://epsg.org).**
+at [https://epsg.org](https://epsg.org). **
 
 
 ```python
@@ -54,7 +54,7 @@ at [https://epsg.org](https://epsg.org).**
 
 ```
 
-### Assigning precincts to districts
+## Assigning precincts to districts
 
 The `assign` function in `maup` takes two sets of geometries called `sources`
 and `targets` and returns a pandas `Series`. The Series maps each geometry in
@@ -83,7 +83,7 @@ As an aside, you can use that `precinct_to_district_assignment` object to create
 [gerrychain](https://gerrychain.readthedocs.io/en/latest/) `Partition`
 representing this districting plan.
 
-### Aggregating block data to precincts
+## Aggregating block data to precincts
 
 Precinct shapefiles usually come with election data, but not demographic data.
 In order to study their demographics, we need to aggregate demographic data from
@@ -108,15 +108,13 @@ operation:
 ```
 
 If you want to move data from one set of geometries to another but your source
-and target geometries do not nest neatly (e.g., have overlaps), see
+geometries do not nest cleanly into your target geometries, see
 [Prorating data when units do not nest neatly](#prorating-data-when-units-do-not-nest-neatly).
 
-### Disaggregating data from precincts down to blocks
+## Disaggregating data from precincts down to blocks
 
 It's common to have data at a coarser scale that you want to attach to
-finer-scaled geometries. Usually this happens when vote totals for a certain
-election are only reported at the county level, and we want to attach that data
-to precinct geometries.
+finer-scale geometries. For instance, this may happen when vote totals for a certain election are only reported at the county level, and we want to attach that data to precinct geometries.
 
 Let's say we want to prorate the vote totals in the columns `"PRES16D"`,
 `"PRES16R"` from our `precincts` GeoDataFrame down to our `blocks` GeoDataFrame.
@@ -176,7 +174,7 @@ proration process due to the zero (or NaN) values for the weights corresponding 
 the blocks in those precincts. If it is crucial to keep vote totals perfectly accurate, 
 these votes will need to be assigned to the new units manually.
 
-### Prorating data when units do not nest neatly
+## Prorating data when units do not nest neatly
 
 Suppose you have a shapefile of precincts with some election results data and
 you want to join that data onto a different, more recent precincts shapefile.
@@ -184,11 +182,10 @@ The two sets of precincts will have overlaps, and will not nest neatly like the
 blocks and precincts did in the above examples. (Not that blocks and precincts
 always nest neatly---in fact, they usually don't!)
 
-In most cases, election data should be prorated from each old precincts to the new
+In most cases, election data should be prorated from each old precinct to the new
 precincts with weights proportional to the population of the intersections between
 the old precinct and each new precinct.  The most straightforward way to accomplish 
-this is to first disaggregate the data from the old precincts to Census blocks as in 
-the example above, and then reaggregate from blocks to the new precincts. 
+this is to first disaggregate the data from the old precincts to Census blocks as in the example above, and then reaggregate from blocks to the new precincts. 
 
 ```python
 >>> old_precincts = precincts
@@ -218,7 +215,7 @@ the example above, and then reaggregate from blocks to the new precincts.
 ```
 
 As a sanity check, let's make sure that no votes were lost in either step.
-Total votes in the old precincts:
+Total votes in the old precincts, blocks, and new precincts:
 ```python
 >>> old_precincts[election_columns].sum()
 SEN18D    23401
@@ -239,9 +236,7 @@ dtype: float64
 Oh no - what happened??? All votes were successfully disaggregated to blocks, but a
 significant percentage were lost when reaggregating to new precincts.
 
-It turns out that when blocks were assigned to both old and new precincts, many blocks
-were not assigned to any precincts.  We can count how many blocks were unassigned in each
-case:
+It turns out that when blocks were assigned to both old and new precincts, many blocks were not assigned to any precincts.  We can count how many blocks were unassigned in each case:
 
 ```python
 print(len(blocks))
@@ -253,7 +248,7 @@ print(blocks_to_new_precincts_assignment.isna().sum())
 ```
 
 So, out of 3,014 total Census blocks, 884 were not assigned to any old precinct and 
-1,227 were not assigned to any new precinct.  If we plot the shapefiles, we can see why:
+1,227 were not assigned to any new precinct.  If we plot the GeoDataFrames, we can see why:
 ```python
 >>> blocks.plot()
 ```
@@ -273,8 +268,7 @@ So, out of 3,014 total Census blocks, 884 were not assigned to any old precinct 
 ![Providence new precincts](./examples/Providence_new_precincts_plot.png)
 
 The boundaries of the regions covered by these shapefiles are substantially 
-different---and that doesn't even get into the possibility that the precinct shapefiles
-may have gaps between precinct polygons that some blocks may fall into.
+different---and that doesn't even get into the possibility that the precinct shapefiles may have gaps between precinct polygons that some blocks may fall into.
 
 Once we know to look for this issue, we can see that it affected the previous example 
 as well:
@@ -299,7 +293,7 @@ moving data around between shapefiles; see
 below for details about how maup can help with this.
 
 
-### Progress bars
+## Progress bars
 
 For long-running operations, the user might want to see a progress bar to
 estimate how much longer a task will take (and whether to abandon it altogether).
@@ -326,72 +320,156 @@ set `maup.progress.enabled = True`:
 
 ```
 
-### Fixing topological issues, overlaps, and gaps
+## Fixing topological issues, overlaps, and gaps
 
 Precinct shapefiles are often created by stitching together collections of
 precinct geometries sourced from different counties or different years. As a
 result, the shapefile often has gaps or overlaps between precincts where the
-different sources disagree about the boundaries. These gaps and overlaps pose
-problems when you are interested in working with the adjacency graph of the
-precincts, and not just in mapping the precincts. This adjacency information is
-especially important when studying redistricting, because districts are almost
-always expected to be contiguous.
+different sources disagree about the boundaries.  (And by "often," we mean "for almost every shapefile that isn't produced by the U.S. Census Burueau.") 
+As we saw in the examples above, these issues can pose problems when moving data between shapefiles.
 
-`maup` provides functions for closing gaps and resolving overlaps in a
-collection of geometries. As an example, we'll apply both functions to these
-geometries, which have both an overlap and a gap:
+Even when working with a single shapefile, gaps and overlaps may cause problems if you are interested in working with the adjacency graph of the precincts. 
+This adjacency information is especially important when studying redistricting, because districts are almost always expected to be contiguous.
 
-![Four polygons with a gap and some overlaps](./examples/plot.png)
+Before doing anything else, it is wise to understand the current status of a shapefile with regard to topological issues.  `maup` provides a `doctor` function to diagnose gaps, overlaps, and invalid geometries.  If a shapefile has none of these issues, `maup.doctor` returns a value of `True`; otherwise it returns `False` along with a brief summary of the problems that it found.
 
-Usually the gaps and overlaps in real shapefiles are tiny and easy to miss, but
-this exaggerated example will help illustrate the functionality.
+The blocks shapefile, like most shapefiles from the Census Bureau, is clean:
+```python
+>>> maup.doctor(blocks)
+True
+```
 
-First, we'll use `shapely` to create the polygons from scratch:
+The old precincts shapefile, however, has some minor issues:
+```python
+>>> maup.doctor(old_precincts)
+There are 2 overlaps.
+There are 3 holes.
+False
+```
+
+As of version 2.0.0, `maup` provides two repair functions with a variety of options for fixing these issues:  
+
+1. `quick_repair` is the new name for the `autorepair` function from version 1.x (and `autorepair` still works as a synonym).  This function makes fairly simplistic repairs to gaps and overlaps:
+    * Any polygon $Q$ created by the overlapping intersection of two geometries $P_1$ and $P_2$ is removed from both polygons and reassigned to the one with which it shares the greatest perimeter.
+    * Any polygon $Q$ representing a gap between geometries $P_1,\ldots, P_n$ is assigned to the one with which it shares the greatest perimeter.
+
+    This function is probably sufficient when gaps and overlaps are all very small in area relative to the areas of the geometries, **AND** when the repaired file will only be used for operations like aggregating and prorating data.  But it should **NOT** be relied upon when it is important for the repaired file to accurately represent adjacency relations between neighboring geometries, such as when a precinct shapefile is used as a basis for creating districting plans with contiguous districts.  
+  
+    For instance, when a gap adjoins many geometries (which happens frequently along county boundaries in precinct shapefiles!), whichever geometry the gap is adjoined to becomes "adjacent" to **all** the other geometries adjoining the gap, which can lead to the creation of discontiguous districts in plans based on the repaired shapefile. 
+
+2. `smart_repair` is a more sophisticated repair function designed to reproduce the "true" adjacency relations between geometries as accurately as possible.  In the case of gaps that adjoin several geometries, this is accomplished by an algorithm that divides the gap into pieces to be assigned to different geometries instead of assigning the entire gap to a single geometry.  
+
+   In addition to repairing gaps and overlaps, `smart_repair` includes two optional features:
+    * In many cases, the shapefile geometries are intended to nest cleanly into some larger units; e.g., in many states, precincts should nest cleanly into counties.  `smart_repair` allows the user to optionally specify a second shapefile---e.g., a shapefile of county boundaries within a state---and then performs the repair process so that the repaired geometries nest cleanly into the units in the second shapefile.
+    * Whether as a result of inaccurate boundaries in the original map or as an artifact of the repair algorithm, it may happen that some units share boundaries with very short perimeter but should actually be considered "queen adjacent"---i.e., intersecting at only a single point---rather than "rook adjacent"---i.e., intersecting along a boundary of positive length.  `smart_repair` includes an optional step in which all rook adjacencies of length below a user-specified parameter are converted to queen adjacencies.
+
+`smart_repair` can accept either a GeoSeries or GeoDataFrame as input, and the output type will be the same as the input type.  The input must be projected to a non-geographic coordinate reference system (CRS)---i.e., **not** lat/long coordinates---in order to have sufficient precision for the repair.  One option is to reproject a GeoDataFrame called `gdf` to a suitable UTM (Universal Transverse Mercator) projection via
+    
+```python
+gdf = gdf.to_crs(gdf.estimate_utm_crs())
+```
+
+
+At a minimum, all overlaps will be repaired in the output. Optional arguments include:
+  * `snapped` (default value `True`): If `True`, all polygon vertices are snapped to a grid of size no more than $10^{-10}$ times the maximum of width/height of the entire shapefile extent. **HIGHLY RECOMMENDED**  to avoid topological exceptions due to rounding errors.
+  * `fill_gaps` (default value `True`): If `True`, all simply connected gaps with area less than `fill_gaps_threshold` times the largest area of all geometries adjoining the gap are filled.  Default threshold is $0.1$; setting `fill_gaps_threshold = None` will fill all simply connected gaps.
+  * `nest_within_regions` (default value `None`): If `nest_within_regions` is a secondary GeoSeries or GeoDataFrame of region boundaries (e.g., counties within a state) then the repair will be performed so that repaired geometries nest cleanly into the region boundaries; specifically, each repaired geometry will be contained in the region with which the original geometry has the largest area of intersection.  Note that the CRS for the region GeoSeries/GeoDataFrame must be the same as that for the primary input.
+  * `min_rook_length` (default value `None`): If `min_rook_length` is given a numerical value, all rook adjacencies with length below this value will be replaced with queen adjacencies.  Note that this is an absolute value and not a relative value, so make sure that the value provided is in the correct units with respect to the input GeoSeries/GeoDataFrame's CRS.
+        
+
+### Examples
+
+#### First, we'll use `shapely` and `geopandas` to create a GeoDataFrame of "toy precincts" from scratch. 
 
 ```python
+import random
+import geopandas
+import maup
 from shapely.geometry import Polygon
-geometries = geopandas.GeoSeries([
-    Polygon([(0, 0), (2, 0), (2, 1), (1, 1), (1, 2), (0, 2)]),
-    Polygon([(2, 0), (4, 0), (4, 2), (2, 2)]),
-    Polygon([(0, 2), (2, 2), (2, 4), (0, 4)]),
-    Polygon([(2, 1), (4, 1), (4, 4), (2, 4)]),
-])
+
+random.seed(2023) # For reproducibility
+
+ppolys = []
+for i in range(4):
+    for j in range(4):
+        poly = Polygon(
+            [(0.5*i + 0.1*k, 0.5*j + (random.random() - 0.5)/12) for k in range(6)] +
+            [(0.5*(i+1) + (random.random() - 0.5)/12, 0.5*j + 0.1*k) for k in range(1,6)] +
+            [(0.5*(i+1) - 0.1*k, 0.5*(j+1) + (random.random() - 0.5)/12) for k in range(1,6)] +
+            [(0.5*i + (random.random() - 0.5)/12, 0.5*(j+1) - 0.1*k) for k in range(1,5)]
+        )
+        ppolys.append(poly)
+        
+toy_precincts_df = geopandas.GeoDataFrame(geometry = geopandas.GeoSeries(ppolys))
+toy_precincts_df.plot(cmap = "tab20", alpha=0.7)
 ```
 
-Now we'll close the gap:
+![toy_precincts](./examples/toy_precincts.png)
+
+Check for gaps and overlaps:
+```python
+>>> maup.doctor(old_precincts)
+There are 28 overlaps.
+There are 23 holes.
+False
+```
+All the gaps between geometries in this example are below the default threshold, so a basic application of `smart_repair` will resolve all overlaps and fill all gaps:
 
 ```python
-without_gaps = maup.close_gaps(geometries)
+toy_precincts_repaired_df = maup.smart_repair(toy_precincts_df)
+toy_precincts_repaired_df.plot(cmap = "tab20", alpha=0.7)
 ```
 
-The `without_gaps` geometries look like this:
+![toy_precincts_repaired](./examples/toy_precincts_repaired.png)
 
-![Four polygons with two overlapping](./examples/plot_without_gaps.png)
+We can check that the repair succeeded:
+```python
+>>> maup.doctor(old_precincts)
+True
+```
 
-And then resolve the overlaps:
+Now suppose that the precincts are intended to nest cleanly into the following "toy counties:"
 
 ```python
-without_overlaps_or_gaps = maup.resolve_overlaps(without_gaps)
+cpoly1 = Polygon([(0,0), (1,0), (1,1), (0,1)])
+cpoly2 = Polygon([(1,0), (2,0), (2,1), (1,1)])
+cpoly3 = Polygon([(0,1), (1,1), (1,2), (0,2)])
+cpoly4 = Polygon([(1,1), (2,1), (2,2), (1,2)])
+
+toy_counties_df = geopandas.GeoDataFrame(geometry = geopandas.GeoSeries([cpoly1, cpoly2, cpoly3, cpoly4]))
+
+toy_counties_df.plot(cmap='tab20')
 ```
+![toy_counties](./examples/toy_counties.png)
 
-The `without_overlaps_or_gaps` geometries look like this:
-
-![Four squares](./examples/plot_without_gaps_or_overlaps.png)
-
-Alternatively, there is also a convenience `maup.autorepair()` function provided that 
-attempts to resolve topological issues as well as close gaps and resolve overlaps:
-
+We can perform a "county-aware" repair as follows:
 ```python
-without_overlaps_or_gaps = maup.autorepair(geometries)
+toy_precincts_repaired_county_aware_df = maup.smart_repair(toy_precincts_df, nest_within_regions = toy_counties_df)
+toy_precincts_repaired_county_aware_df.plot(cmap = "tab20", alpha=0.7)
 ```
+![toy_precincts_repaired_county_aware](./examples/toy_precincts_repaired_county_aware.png)
 
-The functions `resolve_overlaps`, `close_gaps`, and `autorepair` accept a
-`relative_threshold` argument. This threshold controls how large of a gap or
-overlap the function will attempt to fix. The default value of
-`relative_threshold` is `0.1`, which means that the functions will leave alone
-any gap/overlap whose area is more than 10% of the area of the geometries that
-might absorb that gap/overlap. In the above example, we set
-`relative_threshold=None` to ensure that no gaps or overlaps were ignored.
+Next, suppose that we'd like to get rid of small rook adjacencies at corner points where 4 precincts meet.  We might reasonably estimate that these all have length less than $0.1$, so we can accomplish this as follows:
+```python
+toy_precincts_repaired_county_aware_rook_to_queen_df = maup.smart_repair(toy_precincts_df, nest_within_regions = toy_counties_df, min_rook_length = 0.1)
+toy_precincts_repaired_county_aware_rook_to_queen_df.plot(cmap = "tab20", alpha=0.7)
+```
+![toy_precincts_repaired_county_aware_rook_to_queen](./examples/toy_precincts_repaired_county_aware_rook_to_queen.png)
+
+The difference is hard to see, so let's zoom in on gap between the 4 original precincts in the upper left-hand corner.
+
+Original precincts:
+
+![toy_precincts_corner](./examples/toy_precincts_corner.png)
+
+County-aware repair:
+
+![toy_precincts_corner_repaired](./examples/toy_precincts_corner_repaired.png)
+
+County-aware repair with rook adjacency converted to queen:
+
+![toy_precincts_corner_repaired_rook_to_queen](./examples/toy_precincts_corner_repaired_rook_to_queen.png)
+
 
 ## Modifiable areal unit problem
 
@@ -401,3 +479,6 @@ the same spatial data will look different depending on how you divide up the
 space. Since `maup` is all about changing the way your data is aggregated and
 partitioned, we have named it after the MAUP to encourage users to use the
 toolkit thoughtfully and responsibly.
+
+
+

@@ -1,8 +1,7 @@
 import warnings
 
 from geopandas import GeoSeries, GeoDataFrame
-
-from shapely import make_valid 
+from shapely import make_valid
 
 from .indexed_geometries import IndexedGeometries, get_geometries
 from .progress_bar import progress
@@ -26,12 +25,13 @@ def iter_adjacencies(geometries):
         for j, inter in inters.items():
             yield (i, j), inter
 
+
 def adjacencies(
     geometries,
     adjacency_type="rook",
     output_type="geoseries", *, warn_for_overlaps=True, warn_for_islands=True
 ):
-    """Returns adjacencies between geometries.     
+    """Returns adjacencies between geometries.
     The default return type is a
     `GeoSeries` with a `MultiIndex`, whose (i, j)th entry is the pairwise
     intersection between geometry `i` and geometry `j`. We ensure that
@@ -48,20 +48,20 @@ def adjacencies(
     orig_crs = geometries.crs
     geometries = get_geometries(geometries)
     geometries = make_valid(geometries)
-    
+
     adjs = list(iter_adjacencies(geometries))
     if adjs:
         index, geoms = zip(*adjs)
     else:
-        index, geoms = [[],[]]    
-    
+        index, geoms = [[], []]
+
     if output_type == "geodataframe":
-        inters = GeoDataFrame({"neighbors" : index, "geometry" : geoms})
+        inters = GeoDataFrame({"neighbors" : index, "geometry" : geoms}, crs = geometries.crs)
     else:
-        inters = GeoSeries(geoms, index=index)
+        inters = GeoSeries(geoms, index=index, crs=geometries.crs)
 
     if adjacency_type == "rook":
-        inters = inters[inters.length > 0].copy()
+        inters = inters[inters.length > 0]
 
     if warn_for_overlaps:
         overlaps = inters[inters.area > 0]
