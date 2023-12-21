@@ -39,9 +39,9 @@ Updated functions for maup 2.0.0 were written by Jeanne Clelland.
 #########
 
 
-def smart_repair(geometries_df, snapped=True, fill_gaps=True, fill_gaps_threshold=0.1,
-                 disconnection_threshold=0.0001, nest_within_regions=None,
-                 min_rook_length=None):
+def smart_repair(geometries_df, snapped=True, snap_precision=10, fill_gaps=True,
+                 fill_gaps_threshold=0.1, disconnection_threshold=0.0001,
+                 nest_within_regions=None, min_rook_length=None):
     """
     Repairs topology issues (overlaps, gaps, invalid polygons) in a geopandas
     GeoDataFrame or GeoSeries, with an emphasis on preserving intended adjacency
@@ -50,22 +50,25 @@ def smart_repair(geometries_df, snapped=True, fill_gaps=True, fill_gaps_threshol
     Specifically, the algorithm
     (1) Applies shapely.make_valid to all polygon geometries.
     (2) If snapped = True (default), snaps all polygon vertices to a grid of size no
-        more than 10^(-10) times the max of width/height of the entire shapefile extent.
-        HIGHLY RECOMMENDED to avoid topological exceptions due to rounding errors.
+        more than 10^(-snap_precision) times the max of width/height of the entire
+        extent of the input. HIGHLY RECOMMENDED to avoid topological exceptions due to
+        rounding errors.  Default value for snap_precision is 10; if topological
+        exceptions still occur, try reducing snap_precision (which must be integer-
+        valued) to 9 or 8.
     (3) Resolves all overlaps.
     (4) If fill_gaps = True (default), closes all simply connected gaps with area
         less than fill_gaps_threshold times the largest area of all geometries adjoining
         the gap.  Default threshold is 10%; if fill_gaps_threshold = None then all
         simply connected gaps will be filled.
-    (5) If nest_within_regions is a secondary shapefile of region boundaries (e.g.,
-        counties in a state) then all of the above will be performed so that repaired
-        geometries nest cleanly into the region boundaries; each repaired geometry
-        will be contained in the region with which the original geometry has the largest
-        area of intersection.  Default value is None.
+    (5) If nest_within_regions is a secondary GeoDataFrame/GeoSeries of region boundaries
+        (e.g., counties in a state) then all of the above will be performed so that
+        repaired geometries nest cleanly into the region boundaries; each repaired
+        geometrywill be contained in the region with which the original geometry has the
+        largest area of intersection.  Default value is None.
     (6) If min_rook_length is given a numerical value, replaces all rook adjacencies
         with length below this value with queen adjacencies.  Note that this is an
         absolute value and not a relative value, so make sure that the value provided
-        is in the correct units with respect to the shapefile's CRS.
+        is in the correct units with respect to the input's CRS.
         Default value is None.
     (7) Sometimes the repair process creates tiny fragments that are disconnected from
         the district that they are assigned to.  A final cleanup step assigns any such
@@ -115,15 +118,18 @@ def smart_repair(geometries_df, snapped=True, fill_gaps=True, fill_gaps_threshol
         if doctor(nest_within_regions, silent=True, accept_holes=True) is False:
             raise Exception("nest_within_regions must be topologically clean---i.e., all geometries must be valid and there must be no overlaps between geometries. Generally the best source for region shapefiles is the U.S. Census Burueau.")
 
-    # Before doing anything else, make sure all polygons are valid and remove any
-    # LineStrings and MultiLineStrings.
+    # Before doing anything else, make sure all polygons are valid, convert any empty
+    # geometries to empty Polygons to avoid type errors, and remove any LineStrings and
+    # MultiLineStrings.
     for i in geometries_df.index:
         geometries_df["geometry"][i] = make_valid(geometries_df["geometry"][i])
+        if geometries_df["geometry"][i] is None:
+            geometries_df["geometry"][i] = Polygon()
         if geometries_df["geometry"][i].geom_type == "GeometryCollection":
             geometries_df["geometry"][i] = unary_union([x for x in geometries_df["geometry"][i].geoms if x.geom_type in ("Polygon", "MultiPolygon")])
 
     # If snapped is True, snap all polygon vertices to a grid of size no more than
-    # 10^(-10) times the max of width/height of the entire shapefile extent.
+    # 10^(-10) times the max of width/height of the entire extent of the input.
     # (For instance, in Texas this would be less than 1/100th of an inch.)
     # This avoids a rare "non-noded intersection" error due to a GEOS bug and leaves
     # several orders of magnitude for additional intersection operations before hitting
@@ -132,7 +138,7 @@ def smart_repair(geometries_df, snapped=True, fill_gaps=True, fill_gaps_threshol
         # These bounds are in the form (xmin, ymin, xmax, ymax)
         geometries_total_bounds = geometries_df.total_bounds
         largest_bound = max(geometries_total_bounds[2] - geometries_total_bounds[0], geometries_total_bounds[3] - geometries_total_bounds[1])
-        snap_magnitude = int(math.log10(largest_bound)) - 10
+        snap_magnitude = int(math.log10(largest_bound)) - snap_precision
         geometries_df["geometry"] = snap_to_grid(geometries_df["geometry"], n=snap_magnitude)
         if nest_within_regions is not None:
             regions_df["geometry"] = snap_to_grid(regions_df["geometry"], n=snap_magnitude)
@@ -320,10 +326,10 @@ def segments(curve):
 def building_blocks(geometries_df, nest_within_regions=None):
     """
     Partitions the extent of the input via all boundaries of all geometries
-    (and regions, if nest_within_regions is a shapefile of region boundaries);
-    associates to each polygon in the partition the set of polygons in the original
-    shapefile whose intersection created it, and organizes this data according to
-    order of the overlaps. (Order zero = hole)
+    (and regions, if nest_within_regions is a GeoDataFrame/GeoSeries of region
+    boundaries); associates to each polygon in the partition the set of polygons in the
+    original shapefile whose intersection created it, and organizes this data according
+    to order of the overlaps. (Order zero = hole)
     """
     if isinstance(geometries_df, GeoDataFrame) is False:
         raise TypeError("Primary input to building_blocks must be a GeoDataFrame.")
@@ -383,7 +389,7 @@ def building_blocks(geometries_df, nest_within_regions=None):
     for i in progress(pieces_df.index, len(pieces_df.index)):
         # If region boundaries are included, identify the region for each piece.
         # Note that "None" is a possibility, and that each piece will belong to a unique
-        # region because the regions shapefile MUST be clean.
+        # region because the regions GeoDataFrame/GeoSeries MUST be clean.
         if nest_within_regions is not None:
             possible_region_integer_indices = [*set(numpy.ndarray.flatten(r_spatial_index.query(pieces_df["geometry"][i])))]
             possible_region_indices = [r_index_by_iloc[k] for k in possible_region_integer_indices]
@@ -462,7 +468,7 @@ def building_blocks(geometries_df, nest_within_regions=None):
 
 def reconstruct_from_overlap_tower(geometries_df, overlap_tower, nested=False):
     """
-    Rebuild the shapefile polygons with overlaps removed.
+    Rebuild the polygons in geometries_df with overlaps removed.
     """
     # Keep a copy of the original input for comparisons later!
     geometries0_df = geometries_df.copy()
@@ -1551,6 +1557,22 @@ def convexify_hole_boundaries(geometries_df, holes_df):
             # boundary with each geometry by the shortest path within the hole
             # between its endpoints and "filling in" the geometry up to the
             # new boundary. (Exterior boundaries, if any, should be left alone.)
+
+            # In cases where there are 2 or more boundaries with the same target
+            # geometry, we'll need to check to see whether they end up adjacent
+            # after convexifying.  If they do, their UNION isn't guaranteed to be
+            # convexified at the end, so we'll put that hole back in the queue for
+            # another round of processing.
+            if len(set(this_hole_boundaries_df["target"])) == len(this_hole_boundaries_df):
+                target_repetition = False
+            else:
+                target_repetition = True
+                repeated_targets = []
+                for target in set(this_hole_boundaries_df["target"]):
+                    boundaries_this_target = this_hole_boundaries_df[this_hole_boundaries_df["target"] == target]
+                    if len(boundaries_this_target) > 1:
+                        repeated_targets.append((target, len(boundaries_this_target)))
+
             new_hole_in_progress = this_hole
             this_hole_triangulation = triangulate_polygon(new_hole_in_progress)
 
@@ -1582,7 +1604,27 @@ def convexify_hole_boundaries(geometries_df, holes_df):
                     new_hole = orient(new_hole)
                     new_hole_df = GeoDataFrame(geometry=GeoSeries([new_hole]), crs=holes_df.crs)
                     new_hole_df.insert(0, "region", this_region)
-                    completed_holes_df = pandas.concat([completed_holes_df, new_hole_df]).reset_index(drop=True)
+
+                    if target_repetition:
+                        # Check to see whether the target that was repeated in the original
+                        # hole boundaries has fewer (but not zero!) hole boundaries
+                        # associated to it in this hole.  If so, some distinct boundaries
+                        # may have been concatenated after convexifying, resulting in a
+                        # non-convex boundary - so put the hole back in the queue for
+                        # another round of processing.
+                        new_hole_boundaries_df = construct_hole_boundaries(geometries_df, new_hole_df)
+                        reprocess_hole = False
+                        for target in repeated_targets:
+                            new_boundaries_this_target = new_hole_boundaries_df[new_hole_boundaries_df["target"] == target[0]]
+                            if len(new_boundaries_this_target) > 0 and len(new_boundaries_this_target) < target[1]:
+                                reprocess_hole = True
+                                break
+                        if reprocess_hole:
+                            holes_to_process.append(new_hole)
+                        else:
+                            completed_holes_df = pandas.concat([completed_holes_df, new_hole_df]).reset_index(drop=True)
+                    else:
+                        completed_holes_df = pandas.concat([completed_holes_df, new_hole_df]).reset_index(drop=True)
 
         pbar.update(pbar_increment)
 
