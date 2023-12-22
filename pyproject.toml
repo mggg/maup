@@ -1,9 +1,9 @@
 [tool.poetry]
 name = "maup"
-version = "2.0.0"
+version = "2.0.1"
 description = "The geospatial toolkit for redistricting data"
 authors = [
-    "Metric Geometry and Gerrymandering Group <engineering@mggg.org>",
+    "Metric Geometry and Gerrymandering Group <dev@mggg.org>",
     "Max Hully <max@mggg.org>",
     "Max Fan <root@max.fan>"
 ]
@@ -13,6 +13,7 @@ classifiers=[
 	"Programming Language :: Python :: 3.9",
 	"Programming Language :: Python :: 3.10",
 	"Programming Language :: Python :: 3.11",
+	"Programming Language :: Python :: 3.12",
 	"Operating System :: OS Independent",
 	"License :: OSI Approved :: MIT License",
 ]
