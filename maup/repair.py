@@ -195,9 +195,11 @@ def autorepair(geometries, relative_threshold=0.1, force_polygons=False):
     if force_polygons:
         geometries = make_valid_polygons(remove_repeated_vertices(geometries))
         geometries = make_valid_polygons(resolve_overlaps(geometries,
-                                                          relative_threshold=relative_threshold))
+                                                          relative_threshold=relative_threshold,
+                                                          force_polygons=force_polygons))
         geometries = make_valid_polygons(close_gaps(geometries,
-                                                    relative_threshold=relative_threshold))
+                                                    relative_threshold=relative_threshold,
+                                                    force_polygons=force_polygons))
     else:
         geometries = remove_repeated_vertices(geometries).make_valid()
         geometries = resolve_overlaps(geometries, relative_threshold=relative_threshold).make_valid()
