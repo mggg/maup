@@ -37,13 +37,11 @@ def intersections(sources, targets, output_type="geoseries", area_cutoff=None):
         )
     ]
 
-    df = GeoDataFrame.from_records(records, columns=["source", "target", "geometry"])
+    df = GeoDataFrame(records, columns=["source", "target", "geometry"], crs=sources.crs)
     df = df.sort_values(by=["source", "target"]).reset_index(drop=True)
-    df.crs = sources.crs
 
     geometries = df.set_index(["source", "target"]).geometry
     geometries.sort_index(inplace=True)
-    geometries.crs = sources.crs
 
     if area_cutoff is not None:
         df = df[df.area > area_cutoff].reset_index(drop=True)
