@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "maup"
-version = "2.0.1"
+version = "2.0.2"
 description = "The geospatial toolkit for redistricting data"
 authors = [
     "Metric Geometry and Gerrymandering Group <dev@mggg.org>",
