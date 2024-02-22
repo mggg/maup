@@ -16,7 +16,7 @@ if geopandas.options.use_pygeos:
         "`geopandas.options.use_pygeos = False` before importing your shapefile."
     )
 
-__version__ = "2.0.0"
+__version__ = "2.0.2"
 __all__ = [
     "adjacencies",
     "assign",
