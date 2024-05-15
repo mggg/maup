@@ -13,8 +13,14 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
-print(f"The system path is {sys.path}")
 
+
+
+# Add markdown parser
+source_suffix = {
+    '.rst': 'restructuredtext',
+    '.md': 'markdown',
+}
 
 # -- Project information -----------------------------------------------------
 
@@ -32,15 +38,14 @@ release = '2.0.2'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'myst_parser', 
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
-    'numpydoc',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
+    'sphinx_copybutton',
 ]
 
 # apidoc
@@ -57,23 +62,42 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
+pygments_style = 'sphinx'
 
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "pydata_sphinx_theme"
-html_theme_options = {
-    "github_url": "https://github.com/mggg/maup",
-    "show_prev_next": False,
-    "navbar_end": ["search-field.html", "navbar-icon-links.html"],
-}
-html_sidebars = {
-    "**": [],
-}
+html_theme = "sphinx_rtd_theme"
+
+# Theme options are theme-specific and customize the look and feel of a theme
+# further.  For a list of options available for each theme, see the
+# documentation.
+#
+html_theme_options = {"style_nav_header_background": "#0099cd"}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-# html_static_path = ['_static']
+html_static_path = ["_static"]
+
+# Custom sidebar templates, must be a dictionary that maps document names
+# to template names.
+#
+# The default sidebars (for documents that don't match any pattern) are
+# defined by theme itself.  Builtin themes are using these templates by
+# default: ``['localtoc.html', 'relations.html', 'sourcelink.html',
+# 'searchbox.html']``.
+#
+# html_sidebars = {}
+html_css_files = [
+    'css/custom.css',
+]
+
+
+# -- Extension configuration -------------------------------------------------
+
+# Prepend the module name of classes.
+add_module_names = True
+autodoc_inherit_docstrings = False

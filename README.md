@@ -253,19 +253,19 @@ So, out of 3,014 total Census blocks, 884 were not assigned to any old precinct 
 >>> blocks.plot()
 ```
 
-![Providence blocks](./examples/Providence_blocks_plot.png)
+![Providence blocks](../_static/images/Providence_blocks_plot.png)
 
 ```python
 >>> old_precincts.plot()
 ```
 
-![Providence old precincts](./examples/Providence_old_precincts_plot.png)
+![Providence old precincts](../_static/images/Providence_old_precincts_plot.png)
 
 ```python
 >>> new_precincts.plot()
 ```
 
-![Providence new precincts](./examples/Providence_new_precincts_plot.png)
+![Providence new precincts](../_static/images/Providence_new_precincts_plot.png)
 
 The boundaries of the regions covered by these shapefiles are substantially 
 different---and that doesn't even get into the possibility that the precinct shapefiles may have gaps between precinct polygons that some blocks may fall into.
@@ -404,7 +404,7 @@ toy_precincts_df = geopandas.GeoDataFrame(geometry = geopandas.GeoSeries(ppolys)
 toy_precincts_df.plot(cmap = "tab20", alpha=0.7)
 ```
 
-![toy_precincts](./examples/toy_precincts.png)
+![toy_precincts](../_static/images/toy_precincts.png)
 
 Check for gaps and overlaps:
 ```python
@@ -420,7 +420,7 @@ toy_precincts_repaired_df = maup.smart_repair(toy_precincts_df)
 toy_precincts_repaired_df.plot(cmap = "tab20", alpha=0.7)
 ```
 
-![toy_precincts_repaired](./examples/toy_precincts_repaired.png)
+![toy_precincts_repaired](../_static/images/toy_precincts_repaired.png)
 
 We can check that the repair succeeded:
 ```python
@@ -440,35 +440,35 @@ toy_counties_df = geopandas.GeoDataFrame(geometry = geopandas.GeoSeries([cpoly1,
 
 toy_counties_df.plot(cmap='tab20')
 ```
-![toy_counties](./examples/toy_counties.png)
+![toy_counties](../_static/images/toy_counties.png)
 
 We can perform a "county-aware" repair as follows:
 ```python
 toy_precincts_repaired_county_aware_df = maup.smart_repair(toy_precincts_df, nest_within_regions = toy_counties_df)
 toy_precincts_repaired_county_aware_df.plot(cmap = "tab20", alpha=0.7)
 ```
-![toy_precincts_repaired_county_aware](./examples/toy_precincts_repaired_county_aware.png)
+![toy_precincts_repaired_county_aware](../_static/images/toy_precincts_repaired_county_aware.png)
 
 Next, suppose that we'd like to get rid of small rook adjacencies at corner points where 4 precincts meet.  We might reasonably estimate that these all have length less than $0.1$, so we can accomplish this as follows:
 ```python
 toy_precincts_repaired_county_aware_rook_to_queen_df = maup.smart_repair(toy_precincts_df, nest_within_regions = toy_counties_df, min_rook_length = 0.1)
 toy_precincts_repaired_county_aware_rook_to_queen_df.plot(cmap = "tab20", alpha=0.7)
 ```
-![toy_precincts_repaired_county_aware_rook_to_queen](./examples/toy_precincts_repaired_county_aware_rook_to_queen.png)
+![toy_precincts_repaired_county_aware_rook_to_queen](../_static/images/toy_precincts_repaired_county_aware_rook_to_queen.png)
 
 The difference is hard to see, so let's zoom in on gap between the 4 original precincts in the upper left-hand corner.
 
 Original precincts:
 
-![toy_precincts_corner](./examples/toy_precincts_corner.png)
+![toy_precincts_corner](../_static/images/toy_precincts_corner.png)
 
 County-aware repair:
 
-![toy_precincts_corner_repaired](./examples/toy_precincts_corner_repaired.png)
+![toy_precincts_corner_repaired](../_static/images/toy_precincts_corner_repaired.png)
 
 County-aware repair with rook adjacency converted to queen:
 
-![toy_precincts_corner_repaired_rook_to_queen](./examples/toy_precincts_corner_repaired_rook_to_queen.png)
+![toy_precincts_corner_repaired_rook_to_queen](../_static/images/toy_precincts_corner_repaired_rook_to_queen.png)
 
 
 ## Modifiable areal unit problem

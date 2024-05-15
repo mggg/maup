@@ -47,35 +47,36 @@ def smart_repair(geometries_df, snapped=True, snap_precision=10, fill_gaps=True,
     GeoDataFrame or GeoSeries, with an emphasis on preserving intended adjacency
     relations between geometries as closely as possible.
 
-    Specifically, the algorithm
-    (1) Applies shapely.make_valid to all polygon geometries.
-    (2) If snapped = True (default), snaps all polygon vertices to a grid of size no
-        more than 10^(-snap_precision) times the max of width/height of the entire
-        extent of the input. HIGHLY RECOMMENDED to avoid topological exceptions due to
-        rounding errors.  Default value for snap_precision is 10; if topological
-        exceptions still occur, try reducing snap_precision (which must be integer-
-        valued) to 9 or 8.
-    (3) Resolves all overlaps.
-    (4) If fill_gaps = True (default), closes all simply connected gaps with area
-        less than fill_gaps_threshold times the largest area of all geometries adjoining
-        the gap.  Default threshold is 10%; if fill_gaps_threshold = None then all
-        simply connected gaps will be filled.
-    (5) If nest_within_regions is a secondary GeoDataFrame/GeoSeries of region boundaries
-        (e.g., counties in a state) then all of the above will be performed so that
-        repaired geometries nest cleanly into the region boundaries; each repaired
-        geometrywill be contained in the region with which the original geometry has the
-        largest area of intersection.  Default value is None.
-    (6) If min_rook_length is given a numerical value, replaces all rook adjacencies
-        with length below this value with queen adjacencies.  Note that this is an
-        absolute value and not a relative value, so make sure that the value provided
-        is in the correct units with respect to the input's CRS.
-        Default value is None.
-    (7) Sometimes the repair process creates tiny fragments that are disconnected from
-        the district that they are assigned to.  A final cleanup step assigns any such
-        fragments to a neighboring geometry if their area is less than
-        disconnection_threshold times the area of the largest connected component of
-        their assigned geometry. Default threshold is 0.01%, and this seems to work
-        well in practice.
+    Specifically, the algorithm:
+    
+    1. Applies shapely.make_valid to all polygon geometries.
+    2. If snapped = True (default), snaps all polygon vertices to a grid of size no
+       more than 10^(-snap_precision) times the max of width/height of the entire
+       extent of the input. HIGHLY RECOMMENDED to avoid topological exceptions due to
+       rounding errors.  Default value for snap_precision is 10; if topological
+       exceptions still occur, try reducing snap_precision (which must be integer-
+       valued) to 9 or 8.
+    3. Resolves all overlaps.
+    4. If fill_gaps = True (default), closes all simply connected gaps with area
+       less than fill_gaps_threshold times the largest area of all geometries adjoining
+       the gap.  Default threshold is 10%; if fill_gaps_threshold = None then all
+       simply connected gaps will be filled.
+    5. If nest_within_regions is a secondary GeoDataFrame/GeoSeries of region boundaries
+       (e.g., counties in a state) then all of the above will be performed so that
+       repaired geometries nest cleanly into the region boundaries; each repaired
+       geometry will be contained in the region with which the original geometry has the
+       largest area of intersection.  Default value is None.
+    6. If min_rook_length is given a numerical value, replaces all rook adjacencies
+       with length below this value with queen adjacencies.  Note that this is an
+       absolute value and not a relative value, so make sure that the value provided
+       is in the correct units with respect to the input's CRS.
+       Default value is None.
+    7. Sometimes the repair process creates tiny fragments that are disconnected from
+       the district that they are assigned to.  A final cleanup step assigns any such
+       fragments to a neighboring geometry if their area is less than
+       disconnection_threshold times the area of the largest connected component of
+       their assigned geometry. Default threshold is 0.01%, and this seems to work
+       well in practice.
     """
 
     # Keep a copy of the original input for comparisons later!
@@ -613,21 +614,22 @@ def drop_bad_holes(reconstructed_df, holes_df, fill_gaps_threshold):
 def smart_close_gaps(geometries_df, holes_df):
     """
     Fill simply connected gaps; general procedure is roughly as follows:
-    (1) Fill in gaps that only intersect one non-exterior geometry in the
-        obvious way.
-    (2) For remaining gaps, partially fill by "convexifying" boundaries with each
-        non-exterior geometry.  This will have the effect of completely filling
-        gaps that only intersect 2 geometries and no exterior boundaries.
-    (3) For any gap that intersects 4 or more geometries nontrivially (including
-        exterior boundaries), find the non-adjacent pair with the shortest distance
-        between them and try to connect the pair by adding a "triangle" to each of the
-        non-exterior geometries in the pair. (Keep trying until this succeeds for
-        some pair.) This reduces the gap to 1 or 2 smaller gaps, each intersecting
-        strictly fewer geometries than the original. Put the smaller gaps back in the
-        queue for the next round.
-    (4) For any gap that intersects exactly 3 geometries (including exterior boundaries)
-        nontrivially, fill by a process that gives a portion of the gap to each of
-        the non-exterior geometries that it intersects.
+    
+    1. Fill in gaps that only intersect one non-exterior geometry in the
+       obvious way.
+    2. For remaining gaps, partially fill by "convexifying" boundaries with each
+       non-exterior geometry.  This will have the effect of completely filling
+       gaps that only intersect 2 geometries and no exterior boundaries.
+    3. For any gap that intersects 4 or more geometries nontrivially (including
+       exterior boundaries), find the non-adjacent pair with the shortest distance
+       between them and try to connect the pair by adding a "triangle" to each of the
+       non-exterior geometries in the pair. (Keep trying until this succeeds for
+       some pair.) This reduces the gap to 1 or 2 smaller gaps, each intersecting
+       strictly fewer geometries than the original. Put the smaller gaps back in the
+       queue for the next round.
+    4. For any gap that intersects exactly 3 geometries (including exterior boundaries)
+       nontrivially, fill by a process that gives a portion of the gap to each of
+       the non-exterior geometries that it intersects.
     """
     geometries_df = geometries_df.copy()
     holes_df = holes_df.copy()
@@ -1507,11 +1509,13 @@ def shortest_path_in_polygon(polygon, start, end, full_triangulation=None):
 def convexify_hole_boundaries(geometries_df, holes_df):
     """
     Partially fill gaps as follows:
-    (1) Assign any gap that only adjoins 1 geometry to that geometry.
-    (2) For each gap that adjoins at least 2 geometries, "convexify" the geometries
-        surrounding the gap by replacing the gap's boundary with each geometry by the
-        shortest path within the gap between its endpoints and "filling in" the
-        geometry up to the new boundary. (Exterior boundaries, if any, are left alone.)
+    
+    1. Assign any gap that only adjoins 1 geometry to that geometry.
+    2. For each gap that adjoins at least 2 geometries, "convexify" the geometries
+       surrounding the gap by replacing the gap's boundary with each geometry by the
+       shortest path within the gap between its endpoints and "filling in" the
+       geometry up to the new boundary. (Exterior boundaries, if any, are left alone.)
+
     If there are only 2 non-exterior (and no exterior) geometries intersecting
     the gap, this will fill the gap completely; otherwise it will usually leave one or
     more smaller gaps remaining.  The convexity of the geometry boundaries will simplify

@@ -3,49 +3,58 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to maup's API documentation!
+Welcome to MAUP's documentation!
 ====================================
+
+
+.. quick tip on reamaking the readme
+.. pandoc --from=markdown --to=rst --output=introduction.rst ../README.md
+
+.. include:: introduction.rst
+
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Tutorials
 
-``maup`` is the geospatial toolkit for redistricting data. The package streamlines
-the basic workflows that arise when working with blocks, precincts, and
-districts, such as
+   user/getting_started
+   user/prorating
+   user/topological
+   user/simple_example
 
--   Assigning precincts to districts
--   Aggregating block data to precincts
--   Disaggregating data from precincts down to blocks
--   Prorating data when units do not nest neatly
--   Fixing topological issues, overlaps, and gaps
+.. toctree::
+   :maxdepth: 2
+   :caption: Working with GerryChain
 
-Quick help:
+   with_gerrychain/real-life_plan
+   with_gerrychain/islands
 
-- `Example usage <https://github.com/mggg/maup#readme>`_
-- `Best practice guidelines <https://github.com/mggg/maup/blob/master/best-practices.md>`_ 
-- `API reference </en/latest/reference/api/maup/#module-maup>`_ 
+.. Installation
+.. ------------
 
+.. Install ``maup`` by running
 
-Installation
-------------
-
-Install ``maup`` by running::
-
-    pip install maup
+..     pip install maup
 
 
-Contribute
-----------
+.. Contribute
+.. ----------
 
-All contributions are welcome! `maup` is licensed under the MIT license.
+.. All contributions are welcome! `maup` is licensed under the MIT license.
 
-- Issue Tracker: https://github.com/mggg/maup/issues
-- Source Code: https://github.com/mggg/maup
+.. - Issue Tracker: https://github.com/mggg/maup/issues
+.. - Source Code: https://github.com/mggg/maup
 
-Indices and tables
-==================
+.. Indices and tables
+.. ==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. * :ref:`genindex`
+.. * :ref:`modindex`
+.. * :ref:`search`
+
+
+.. toctree::
+    :caption: Index
+    :maxdepth: 4
+
+    full_ref

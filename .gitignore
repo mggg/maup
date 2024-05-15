@@ -72,5 +72,9 @@ junit.xml
 # Editors
 .vscode/
 
+# Working environments
+.venv
+.docs_venv
+
 # Pytest cache
 .pytest_cache/
