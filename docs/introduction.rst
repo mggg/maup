@@ -5,15 +5,15 @@ streamlines the basic workflows that arise when working with blocks,
 precincts, and districts, such as
 
 -  `Assigning precincts to
-   districts <user/getting_started.html#assigning-precincts-to-districts>`_,
+   districts <user/getting_started#assigning-precincts-to-districts>`_,
 -  `Aggregating block data to
-   precincts <user/getting_started.html#aggregating-block-data-to-precincts>`__,
+   precincts <user/getting_started#aggregating-block-data-to-precincts>`__,
 -  `Disaggregating data from precincts down to
-   blocks <user/getting_started.html#disaggregating-data-from-precincts-down-to-blocks>`__,
+   blocks <user/getting_started#disaggregating-data-from-precincts-down-to-blocks>`__,
 -  `Prorating data when units do not nest
-   neatly <user/prorating.html>`__, and
+   neatly <user/prorating>`__, and
 -  `Fixing topological issues, overlaps, and
-   gaps <user/topological.html>`__
+   gaps <user/topological>`__
 
 The project's priorities are to be efficient by using spatial indices
 whenever possible and to integrate well with the existing ecosystem
