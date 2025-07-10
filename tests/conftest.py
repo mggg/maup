@@ -2,9 +2,8 @@ import geopandas as gp
 import pandas as pd
 import pytest
 from shapely.geometry import Polygon
-import maup
 
-CRS = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
+CRS = "EPSG:4326"  # WGS 84, commonly used for geographic data
 
 
 @pytest.fixture
@@ -22,8 +21,11 @@ def four_square_grid():
     b = Polygon([(0, 1), (0, 2), (1, 2), (1, 1)])
     c = Polygon([(1, 0), (1, 1), (2, 1), (2, 0)])
     d = Polygon([(1, 1), (1, 2), (2, 2), (2, 1)])
+
     df = gp.GeoDataFrame(
-        {"ID": ["a", "b", "c", "d"], "geometry": [a, b, c, d]}, crs=CRS
+        {"ID": ["a", "b", "c", "d"], "geometry": [a, b, c, d]},
+        geometry="geometry",
+        crs=CRS,
     )
     return df
 
@@ -90,11 +92,10 @@ def square_mostly_in_top_left():
 def squares_some_neat_some_overlapping(
     square_mostly_in_top_left, squares_within_four_square_grid
 ):
-    result = pd.concat([squares_within_four_square_grid,
-                        square_mostly_in_top_left], ignore_index=True
-                       )
-    result.crs = CRS
-    return result
+    result = pd.concat(
+        [squares_within_four_square_grid, square_mostly_in_top_left], ignore_index=True
+    )
+    return gp.GeoSeries(result.values, crs=CRS)
 
 
 @pytest.fixture

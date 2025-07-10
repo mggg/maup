@@ -1,34 +1,36 @@
 [tool.poetry]
 name = "maup"
-version = "2.0.2"
+version = "2.0.3"
 description = "The geospatial toolkit for redistricting data"
 authors = [
     "Metric Geometry and Gerrymandering Group <dev@mggg.org>",
     "Max Hully <max@mggg.org>",
     "Max Fan <root@max.fan>"
 ]
-readme = "README.md"
 license = "MIT"
-classifiers=[
-	"Programming Language :: Python :: 3.9",
-	"Programming Language :: Python :: 3.10",
-	"Programming Language :: Python :: 3.11",
-	"Programming Language :: Python :: 3.12",
-	"Operating System :: OS Independent",
-	"License :: OSI Approved :: MIT License",
+readme = "README.md"
+keywords = ["geospatial", "redistricting", "gis"]
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "License :: OSI Approved :: MIT License"
+]
+packages = [
+    { include = "maup" }
 ]
 include = ["best-practices.md"]
-exclude = ["examples/", "tests/"]
+exclude = ["examples", "tests"]
 
 [tool.poetry.dependencies]
-python = "^3.9.0,<3.13.0"
-numpy = "^1.23.0"
-pandas = "^2.1.2"
-geopandas = "^0.14.0"
-Shapely = "^2.0.1"
-tqdm = "^4.61.1"
+python = ">=3.11,<3.13"
+numpy = "^2.2.1"
+pandas = "^2.3.1"
+geopandas = "^1.1.1"
+Shapely = "^2.1.1"
+tqdm = "^4.67.1"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 pytest = "^6.2.4"
 pytest-cov = "^2.12.1"
 Sphinx = "^4.0.2"
