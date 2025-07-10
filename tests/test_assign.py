@@ -130,7 +130,7 @@ def test_assign_dispatches_to_without_area_and_with_area(
     four_square_grid, squares_some_neat_some_overlapping, crs
 ):
     other = four_square_grid.set_index("ID")
-    other.crs = crs
+    other.to_crs(crs, inplace=True)
     print(squares_some_neat_some_overlapping.crs, other.crs)
     assignment = assign(squares_some_neat_some_overlapping, other)
     expected = pandas.Series(
@@ -139,13 +139,16 @@ def test_assign_dispatches_to_without_area_and_with_area(
 
     assert (expected == assignment).all()
 
+
 def test_example_case():
     # Losely based off test_example_case function in test_prorate.py
     blocks = geopandas.read_file("zip://./examples/blocks.zip")
     precincts = geopandas.read_file("zip://./examples/new_precincts.zip")
+    blocks.to_crs("EPSG:5070", inplace=True)
+    precincts.to_crs("EPSG:5070", inplace=True)
     columns = ["TOTPOP", "BVAP", "WVAP", "HISP"]
     assignment = assign(blocks, precincts)
     precincts[columns] = blocks[columns].groupby(assignment).sum()
     assert (precincts[columns] > 0).sum().sum() > len(precincts)
-    for col in columns: # fails because it does not neatly cover
+    for col in columns:  # fails because it does not neatly cover
         assert abs(precincts[col].sum() - blocks[col].sum()) / blocks[col].sum() < 0.5

@@ -77,6 +77,9 @@ def test_example_case():
     blocks = geopandas.read_file("zip://./examples/blocks.zip")
     old_precincts = geopandas.read_file("zip://./examples/precincts.zip")
     new_precincts = geopandas.read_file("zip://./examples/new_precincts.zip")
+    blocks.to_crs("EPSG:5070", inplace=True)
+    old_precincts.to_crs("EPSG:5070", inplace=True)
+    new_precincts.to_crs("EPSG:5070", inplace=True)
     columns = ["SEN18D", "SEN18R"]
     # Include area_cutoff=0 to ignore any intersections with no area,
     # like boundary intersections, which we do not want to include in
@@ -90,7 +93,11 @@ def test_example_case():
 
     assert (new_precincts[columns] > 0).sum().sum() > len(new_precincts) / 2
     for col in columns:
-        assert abs(new_precincts[col].sum() - old_precincts[col].sum()) / old_precincts[col].sum() < 0.1
+        assert (
+            abs(new_precincts[col].sum() - old_precincts[col].sum())
+            / old_precincts[col].sum()
+            < 0.1
+        )
 
 
 def test_trivial_case(sources):

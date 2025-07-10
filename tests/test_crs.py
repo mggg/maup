@@ -4,9 +4,8 @@ from maup.crs import require_same_crs
 
 
 def test_require_same_crs(square, four_square_grid):
-    square_gdf = gpd.GeoDataFrame([{"geometry": square}])
-    square_gdf.crs = 4432
-    four_square_grid.crs = 4433
+    square_gdf = gpd.GeoDataFrame([{"geometry": square}], crs=4432)
+    four_square_grid = four_square_grid.set_crs(4433, allow_override=True)
 
     @require_same_crs
     def f(sources, targets):

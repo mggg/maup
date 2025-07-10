@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 from shapely.geometry import Polygon
 
-CRS = "EPSG:4326"  # WGS 84, commonly used for geographic data
+CRS = "EPSG:5070"  # WGS 84, commonly used for geographic data
 
 
 @pytest.fixture

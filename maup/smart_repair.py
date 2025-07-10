@@ -296,8 +296,8 @@ def smart_repair(
                     reconstructed_this_region_df, holes_this_region_df
                 )
 
-            reconstructed_df["geometry"].loc[
-                list(reconstructed_this_region_df.index)
+            reconstructed_df.loc[
+                list(reconstructed_this_region_df.index), "geometry"
             ] = reconstructed_this_region_df["geometry"]
 
     # Check for geometries that have become (more) disconnected, generally with an extra
@@ -588,7 +588,7 @@ def building_blocks(geometries_df, nest_within_regions=None):
                     .representative_point()
                     .intersects(regions_df["geometry"][j])
                 ):
-                    pieces_df["region"][i] = j
+                    pieces_df.at[i, "region"] = j
 
         # Now identify the set of geometries in the main geometry that each piece is
         # contained in. If region boundaries are included, then while determining which
@@ -1089,13 +1089,13 @@ def smart_close_gaps(geometries_df, holes_df):
 
                     if nearest_point_position == 0:
                         # Add the entire hole to target_geometries[1].
-                        geometries_df["geometry"][target_geometries[1]] = union_all(
+                        geometries_df.at[target_geometries[1], "geometry"] = union_all(
                             [geometries_df["geometry"][target_geometries[1]], this_hole]
                         )
 
                     elif nearest_point_position == len(ext_boundary_points) - 1:
                         # Add the entire hole to target_geometries[2].
-                        geometries_df["geometry"][target_geometries[2]] = union_all(
+                        geometries_df.at[target_geometries[2], "geometry"] = union_all(
                             [geometries_df["geometry"][target_geometries[2]], this_hole]
                         )
 
@@ -1120,7 +1120,7 @@ def smart_close_gaps(geometries_df, holes_df):
                             ]
                         )
                         poly1_to_add = polygonize(poly1_to_add_boundary)[0]
-                        geometries_df["geometry"][target_geometries[1]] = union_all(
+                        geometries_df.at[target_geometries[1], "geometry"] = union_all(
                             [
                                 geometries_df["geometry"][target_geometries[1]],
                                 poly1_to_add,
@@ -1137,7 +1137,7 @@ def smart_close_gaps(geometries_df, holes_df):
                             ]
                         )
                         poly2_to_add = polygonize(poly2_to_add_boundary)[0]
-                        geometries_df["geometry"][target_geometries[2]] = union_all(
+                        geometries_df.at[target_geometries[2], "geometry"] = union_all(
                             [
                                 geometries_df["geometry"][target_geometries[2]],
                                 poly2_to_add,
@@ -1303,7 +1303,7 @@ def smart_close_gaps(geometries_df, holes_df):
                             [this_hole_boundaries[0], v0_to_i01_path, v1_to_i01_path]
                         )
                         poly0_to_add = polygonize(poly0_to_add_boundary)[0]
-                        geometries_df["geometry"][target_geometries[0]] = union_all(
+                        geometries_df.at[target_geometries[0], "geometry"] = union_all(
                             [
                                 geometries_df["geometry"][target_geometries[0]],
                                 poly0_to_add,
@@ -1314,7 +1314,7 @@ def smart_close_gaps(geometries_df, holes_df):
                             [this_hole_boundaries[1], v1_to_i12_path, v2_to_i12_path]
                         )
                         poly1_to_add = polygonize(poly1_to_add_boundary)[0]
-                        geometries_df["geometry"][target_geometries[1]] = union_all(
+                        geometries_df.at[target_geometries[1], "geometry"] = union_all(
                             [
                                 geometries_df["geometry"][target_geometries[1]],
                                 poly1_to_add,
@@ -1325,7 +1325,7 @@ def smart_close_gaps(geometries_df, holes_df):
                             [this_hole_boundaries[2], v2_to_i02_path, v0_to_i02_path]
                         )
                         poly2_to_add = polygonize(poly2_to_add_boundary)[0]
-                        geometries_df["geometry"][target_geometries[2]] = union_all(
+                        geometries_df.at[target_geometries[2], "geometry"] = union_all(
                             [
                                 geometries_df["geometry"][target_geometries[2]],
                                 poly2_to_add,
@@ -1425,11 +1425,13 @@ def smart_close_gaps(geometries_df, holes_df):
                                 for poly_to_add in polys_to_add:
                                     if poly_to_add.area > 0:
                                         found_triangles = True
-                                        geometries_df["geometry"][geom_int] = union_all(
-                                            [
-                                                geometries_df["geometry"][geom_int],
-                                                poly_to_add,
-                                            ]
+                                        geometries_df.at[geom_int, "geometry"] = (
+                                            union_all(
+                                                [
+                                                    geometries_df["geometry"][geom_int],
+                                                    poly_to_add,
+                                                ]
+                                            )
                                         )
                                         this_hole = this_hole.difference(poly_to_add)
 
@@ -1549,7 +1551,7 @@ def smart_close_gaps(geometries_df, holes_df):
                                         )
                                         == 0
                                     ):
-                                        geometries_df["geometry"][geom1] = union_all(
+                                        geometries_df.at[geom1, "geometry"] = union_all(
                                             [
                                                 geometries_df["geometry"][geom1],
                                                 poly_to_add,
@@ -1572,7 +1574,7 @@ def smart_close_gaps(geometries_df, holes_df):
                                         )
                                         > 0
                                     ):
-                                        geometries_df["geometry"][geom2] = union_all(
+                                        geometries_df.at[geom2, "geometry"] = union_all(
                                             [
                                                 geometries_df["geometry"][geom2],
                                                 poly_to_add,
@@ -1581,7 +1583,7 @@ def smart_close_gaps(geometries_df, holes_df):
                                         this_hole = this_hole.difference(poly_to_add)
 
                                     elif geom1 == geom2:
-                                        geometries_df["geometry"][geom1] = union_all(
+                                        geometries_df.at[geom1, "geometry"] = union_all(
                                             [
                                                 geometries_df["geometry"][geom1],
                                                 poly_to_add,
@@ -1680,10 +1682,10 @@ def small_rook_to_queen(geometries_df, min_rook_length):
             small_adj_list_no_point = [
                 x for x in small_adj_list if x.geom_type != "Point"
             ]
-            small_adj_df["geometry"][ind] = MultiLineString(small_adj_list_no_point)
+            small_adj_df.at[ind, "geometry"] = MultiLineString(small_adj_list_no_point)
 
         if small_adj_df["geometry"][ind].geom_type == "MultiLineString":
-            small_adj_df["geometry"][ind] = linemerge(small_adj_df["geometry"][ind])
+            small_adj_df.at[ind, "geometry"] = linemerge(small_adj_df["geometry"][ind])
 
     small_adj_df = small_adj_df.explode(index_parts=False).reset_index(drop=True)
 
@@ -1858,7 +1860,7 @@ def small_rook_to_queen(geometries_df, min_rook_length):
                     poly_to_remove_boundaries_df["geometry"][b_ind].geom_type
                     == "MultiLineString"
                 ):
-                    poly_to_remove_boundaries_df["geometry"][b_ind] = linemerge(
+                    poly_to_remove_boundaries_df.at[b_ind, "geometry"] = linemerge(
                         poly_to_remove_boundaries_df["geometry"][b_ind]
                     )
 

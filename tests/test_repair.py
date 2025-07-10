@@ -9,13 +9,13 @@ import pytest
 def test_example_close_gaps_repair_MI():
     shp = geopandas.read_file("zip://./examples/MI.zip")  # MI shapefile
 
-    holes = maup.repair.holes_of_union(shp)
-    assert len(holes) > 0
-    assert holes.union_all.area > 100
+    maup_holes = maup.repair.holes_of_union(shp)
+    assert len(maup_holes) > 0
+    assert maup_holes.union_all().area > 100
     shp["geometry"] = maup.close_gaps(shp, relative_threshold=None)
 
     # assert len(maup.repair.holes_of_union(shp)) == 0 # this fails, probably due to floating precision issues
-    assert maup.repair.holes_of_union(shp).union_all.area < 1e-10  # good enough?
+    assert maup.repair.holes_of_union(shp).union_all().area < 1e-10  # good enough?
 
 
 def test_example_resolve_overlaps_repair_MI():
@@ -35,7 +35,7 @@ def test_example_autorepair_MI():
 
     assert count_overlaps(shp) > 0
     holes = maup.repair.holes_of_union(shp)
-    assert holes.union_all.area > 100
+    assert holes.union_all().area > 100
     assert len(holes) > 0
 
     shp["geometry"] = maup.quick_repair(shp, relative_threshold=None)
@@ -59,6 +59,9 @@ def test_crop_to():
     blocks = geopandas.read_file("zip://./examples/blocks.zip")
     old_precincts = geopandas.read_file("zip://./examples/precincts.zip")
     new_precincts = geopandas.read_file("zip://./examples/new_precincts.zip")
+    blocks.to_crs("EPSG:5070", inplace=True)
+    old_precincts.to_crs("EPSG:5070", inplace=True)
+    new_precincts.to_crs("EPSG:5070", inplace=True)
     columns = ["SEN18D", "SEN18R"]
 
     # Calculate without cropping
