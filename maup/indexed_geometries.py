@@ -24,7 +24,7 @@ class IndexedGeometries:
         # (2 x n) array instead of a (1 x n) array, so it's safest to flatten the query
         # output before proceeding.
         relevant_index_array = self.spatial_index.query(geometry)
-        relevant_indices = [*set(numpy.ndarray.flatten(relevant_index_array))]
+        relevant_indices = list(set(relevant_index_array.ravel()))
         relevant_geometries = self.geometries.iloc[relevant_indices]
         return relevant_geometries
 

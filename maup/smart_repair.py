@@ -263,7 +263,7 @@ def smart_repair(geometries_df, snapped=True, snap_precision=9, fill_gaps=True,
                     c_ind = component_areas_sorted[i][0]
                     this_fragment = reconstructed_df.loc[g_ind, "geometry"].geoms[c_ind]
                     if component_areas_sorted[i][1] < disconnection_threshold*big_area:
-                        possible_intersect_integer_indices = [*set(numpy.ndarray.flatten(spatial_index.query(this_fragment)))]
+                        possible_intersect_integer_indices = list(set(spatial_index.query(this_fragment).ravel()))
                         possible_intersect_indices = [(index_by_iloc[k]) for k in possible_intersect_integer_indices]
 
                         if nest_within_regions is not None:
@@ -415,7 +415,7 @@ def building_blocks(geometries_df, snap_magnitude=None, nest_within_regions=None
         # Note that "None" is a possibility, and that each piece will belong to a unique
         # region because the regions GeoDataFrame/GeoSeries MUST be clean.
         if nest_within_regions is not None:
-            possible_region_integer_indices = [*set(numpy.ndarray.flatten(r_spatial_index.query(pieces_df.loc[i, "geometry"])))]
+            possible_region_integer_indices = list(set(r_spatial_index.query(pieces_df.loc[i, "geometry"]).ravel()))
             possible_region_indices = [r_index_by_iloc[k] for k in possible_region_integer_indices]
 
             for j in possible_region_indices:
@@ -426,7 +426,7 @@ def building_blocks(geometries_df, snap_magnitude=None, nest_within_regions=None
         # contained in. If region boundaries are included, then while determining which
         # geometries each piece is contained in, omit any geometries that are
         # assigned to a region other than the one the piece is contained in.
-        possible_geom_integer_indices = [*set(numpy.ndarray.flatten(g_spatial_index.query(pieces_df.loc[i, "geometry"])))]
+        possible_geom_integer_indices = list(set(g_spatial_index.query(pieces_df.loc[i, "geometry"]).ravel()))
         possible_geom_indices = [g_index_by_iloc[k] for k in possible_geom_integer_indices]
 
         for j in possible_geom_indices:
@@ -558,7 +558,7 @@ def reconstruct_from_overlap_tower(geometries_df, overlap_tower, nested=False):
         o_index_by_iloc = dict((i, list(overlaps_df.index)[i]) for i in range(len(overlaps_df)))
 
         for g_ind in geometries_disconnected_df.index:
-            possible_overlap_integer_indices = [*set(numpy.ndarray.flatten(o_spatial_index.query(geometries_disconnected_df.loc[g_ind, "geometry"])))]
+            possible_overlap_integer_indices = list(set(o_spatial_index.query(geometries_disconnected_df.loc[g_ind, "geometry"]).ravel()))
             possible_overlap_indices_0 = [o_index_by_iloc[k] for k in possible_overlap_integer_indices]
             possible_overlap_indices = list(set(possible_overlap_indices_0) & set(overlaps_df_unused_indices))
 
@@ -593,7 +593,7 @@ def reconstruct_from_overlap_tower(geometries_df, overlap_tower, nested=False):
         for o_ind in overlaps_df_unused_indices:
             this_overlap = overlaps_df.loc[o_ind, "geometry"]
             shared_perimeters = []
-            possible_geom_integer_indices = [*set(numpy.ndarray.flatten(g_spatial_index.query(this_overlap)))]
+            possible_geom_integer_indices = list(set(g_spatial_index.query(this_overlap).ravel()))
             possible_geom_indices = [g_index_by_iloc[k] for k in possible_geom_integer_indices]
 
             for g_ind in possible_geom_indices:
@@ -616,7 +616,7 @@ def reconstruct_from_overlap_tower(geometries_df, overlap_tower, nested=False):
             this_overlap = orphaned_overlaps[o_ind][0]
             this_overlap_polygon_indices = orphaned_overlaps[o_ind][1]
             shared_perimeters = []
-            possible_geom_integer_indices = [*set(numpy.ndarray.flatten(g_spatial_index.query(this_overlap)))]
+            possible_geom_integer_indices = list(set(g_spatial_index.query(this_overlap).ravel()))
             possible_geom_indices = [g_index_by_iloc[k] for k in possible_geom_integer_indices]
 
             for g_ind in possible_geom_indices:
@@ -653,7 +653,7 @@ def drop_bad_holes(reconstructed_df, holes_df, fill_gaps_threshold):
         hole_indices_to_drop_aat = []
         for h_ind in holes_df.index:
             this_hole = holes_df.loc[h_ind, "geometry"]
-            possible_intersect_integer_indices = [*set(numpy.ndarray.flatten(spatial_index.query(this_hole)))]
+            possible_intersect_integer_indices = list(set(spatial_index.query(this_hole).ravel()))
             possible_intersect_indices = [(index_by_iloc[k]) for k in possible_intersect_integer_indices]
             actual_intersect_indices = [g_ind for g_ind in possible_intersect_indices if not this_hole.intersection(reconstructed_df.loc[g_ind, "geometry"]).is_empty]
 
@@ -1211,7 +1211,7 @@ def small_rook_to_queen(geometries_df, min_rook_length):
             poly_to_remove = polys_to_remove_list[a_ind]
 
             # Identify geometries that might intersect this polygon.
-            possible_geom_integer_indices = [*set(numpy.ndarray.flatten(g_spatial_index.query(poly_to_remove)))]
+            possible_geom_integer_indices = list(set(g_spatial_index.query(poly_to_remove).ravel()))
             possible_geom_indices = [g_index_by_iloc[k] for k in possible_geom_integer_indices]
 
             # Use the boundaries of these geometries together with the boundary of the disk to
@@ -1236,7 +1236,7 @@ def small_rook_to_queen(geometries_df, min_rook_length):
             pieces_df["polygon indices"] = [set() for x in range(len(pieces_df.index))]
 
             for i in pieces_df.index:
-                temp_possible_geom_integer_indices = [*set(numpy.ndarray.flatten(g_spatial_index.query(pieces_df.loc[i, "geometry"])))]
+                temp_possible_geom_integer_indices = list(set(g_spatial_index.query(pieces_df.loc[i, "geometry"]).ravel()))
                 temp_possible_geom_indices = [g_index_by_iloc[k] for k in temp_possible_geom_integer_indices]
 
                 for j in temp_possible_geom_indices:
@@ -1327,7 +1327,7 @@ def construct_hole_boundaries(geometries_df, holes_df):
         this_hole_segments = segments(this_hole.boundary)
         this_hole_segments_used = []
 
-        possible_geom_integer_indices = [*set(numpy.ndarray.flatten(g_spatial_index.query(holes_df.loc[h_ind, "geometry"])))]
+        possible_geom_integer_indices = list(set(g_spatial_index.query(holes_df.loc[h_ind, "geometry"]).ravel()))
         possible_geom_indices = [g_index_by_iloc[k] for k in possible_geom_integer_indices]
 
         for g_ind in possible_geom_indices:
