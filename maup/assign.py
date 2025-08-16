@@ -1,4 +1,5 @@
 import pandas
+import warnings
 
 from .indexed_geometries import IndexedGeometries
 from .intersections import intersections
@@ -25,7 +26,12 @@ def assign(sources, targets):
         )
         assignment.update(assignments_by_area)
 
-    # TODO: add a warning here if there are still unassigned source geometries.
+    # Warn here if there are still unassigned source geometries.
+    unassigned = sources[assignment.isna()]
+    if len(unassigned):  # skip if done
+        warnings.warn("Warning: Some units in the source geometry were unassigned.") 
+    
+    
     return assignment.astype(targets.index.dtype, errors="ignore")
 
 
