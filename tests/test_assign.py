@@ -1,9 +1,10 @@
 import geopandas
 import pandas
 from numpy import nan
+import pytest
 
 from maup import assign
-from maup.assign import assign_by_area, assign_by_covering
+from maup.assign import assign_by_area, assign_by_covering, AssigmentWarning
 
 
 def test_assign_assigns_geometries_when_they_nest_neatly(
@@ -147,7 +148,12 @@ def test_example_case():
     blocks.to_crs("EPSG:5070", inplace=True)
     precincts.to_crs("EPSG:5070", inplace=True)
     columns = ["TOTPOP", "BVAP", "WVAP", "HISP"]
-    assignment = assign(blocks, precincts)
+
+    with pytest.warns(
+        AssigmentWarning, match="Some units in the source geometry were unassigned."
+    ):
+        assignment = assign(blocks, precincts)
+
     precincts[columns] = blocks[columns].groupby(assignment).sum()
     assert (precincts[columns] > 0).sum().sum() > len(precincts)
     for col in columns:  # fails because it does not neatly cover

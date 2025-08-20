@@ -1,6 +1,7 @@
 import geopandas
 import maup
 from maup.repair import count_overlaps, autorepair, quick_repair
+from maup.assign import AssigmentWarning
 import pytest
 
 # These tests are losely based off the test_example_case in test_prorate.py
@@ -66,7 +67,13 @@ def test_crop_to():
 
     # Calculate without cropping
     pieces = maup.intersections(old_precincts, new_precincts, area_cutoff=0)
-    weights = blocks["TOTPOP"].groupby(maup.assign(blocks, pieces)).sum()
+
+    with pytest.warns(
+        AssigmentWarning, match="Some units in the source geometry were unassigned."
+    ):
+        # Weight by prorated population from blocks
+        weights = blocks["TOTPOP"].groupby(maup.assign(blocks, pieces)).sum()
+
     weights = maup.normalize(weights, level=0)
     new_precincts[columns] = maup.prorate(
         pieces, old_precincts[columns], weights=weights
@@ -76,7 +83,13 @@ def test_crop_to():
     old_precincts["geometries"] = maup.crop_to(old_precincts, new_precincts)
     new_precincts_cropped = new_precincts.copy()
     pieces = maup.intersections(old_precincts, new_precincts_cropped, area_cutoff=0)
-    weights = blocks["TOTPOP"].groupby(maup.assign(blocks, pieces)).sum()
+
+    with pytest.warns(
+        AssigmentWarning, match="Some units in the source geometry were unassigned."
+    ):
+        # Weight by prorated population from blocks
+        weights = blocks["TOTPOP"].groupby(maup.assign(blocks, pieces)).sum()
+
     weights = maup.normalize(weights, level=0)
     new_precincts_cropped[columns] = maup.prorate(
         pieces, old_precincts[columns], weights=weights

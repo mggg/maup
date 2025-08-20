@@ -24,7 +24,7 @@ class IndexedGeometries:
         # (2 x n) array instead of a (1 x n) array, so it's safest to flatten the query
         # output before proceeding.
         relevant_index_array = self.spatial_index.query(geometry)
-        relevant_indices = [*set(numpy.ndarray.flatten(relevant_index_array))]
+        relevant_indices = list(set(relevant_index_array.ravel()))
         relevant_geometries = self.geometries.iloc[relevant_indices]
         return relevant_geometries
 
@@ -63,7 +63,9 @@ class IndexedGeometries:
             # covering units at the assign_by_area step ub maup.assign.
             groups_concat_index_list = list(groups_concat.index)
             seen = set()
-            bad_indices = list(set([x for x in groups_concat_index_list if x in seen or seen.add(x)]))
+            bad_indices = list(
+                set([x for x in groups_concat_index_list if x in seen or seen.add(x)])
+            )
             if len(bad_indices) > 0:
                 groups_concat = groups_concat.drop(bad_indices)
             return groups_concat.reindex(self.index)

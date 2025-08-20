@@ -9,7 +9,7 @@ from .indices import get_geometries_with_range_index
 @require_same_crs
 def intersections(sources, targets, output_type="geoseries", area_cutoff=None):
     """Computes all of the nonempty intersections between two sets of geometries.
-    By default, the returned :meth:`~geopandas.GeoSeries` will have a MultiIndex, where the
+    By default, the returned `~geopandas.GeoSeries` will have a MultiIndex, where the
     geometry at index *(i, j)* is the intersection of ``sources[i]`` and ``targets[j]``
     (if it is not empty).
     If output_type == "geodataframe", the return type is a range-indexed GeoDataFrame
@@ -20,8 +20,8 @@ def intersections(sources, targets, output_type="geoseries", area_cutoff=None):
     :param targets: geometries
     :type targets: :class:`~geopandas.GeoSeries` or :class:`~geopandas.GeoDataFrame`
     :rtype: :class:`~geopandas.GeoSeries`
-    :param area_cutoff: (optional) if provided, only return intersections with area 
-    greater than ``area_cutoff``
+    :param area_cutoff: (optional) if provided, only return intersections with
+        area greater than ``area_cutoff``
     :type area_cutoff: Number or None
     """
 
@@ -37,7 +37,9 @@ def intersections(sources, targets, output_type="geoseries", area_cutoff=None):
         )
     ]
 
-    df = GeoDataFrame(records, columns=["source", "target", "geometry"], crs=sources.crs)
+    df = GeoDataFrame(
+        records, columns=["source", "target", "geometry"], crs=sources.crs
+    )
     df = df.sort_values(by=["source", "target"]).reset_index(drop=True)
 
     geometries = df.set_index(["source", "target"]).geometry

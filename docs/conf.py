@@ -12,24 +12,24 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('..'))
 
+sys.path.insert(0, os.path.abspath(".."))
 
 
 # Add markdown parser
 source_suffix = {
-    '.rst': 'restructuredtext',
-    '.md': 'markdown',
+    ".rst": "restructuredtext",
+    ".md": "markdown",
 }
 
 # -- Project information -----------------------------------------------------
 
-project = 'maup'
-copyright = '2023, MGGG'
-author = 'Jeanne Clelland, Max Fan, Max Hully '
+project = "maup"
+copyright = "2023, MGGG"
+author = "Jeanne Clelland, Max Fan, Max Hully "
 
 # The full version, including alpha/beta/rc tags
-release = '2.0.2'
+release = "2.0.2"
 
 
 # -- General configuration ---------------------------------------------------
@@ -38,31 +38,31 @@ release = '2.0.2'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
-    'sphinx.ext.doctest',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.todo',
-    'sphinx.ext.ifconfig',
-    'sphinx.ext.viewcode',
-    'sphinx_copybutton',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.doctest",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.todo",
+    "sphinx.ext.ifconfig",
+    "sphinx.ext.viewcode",
+    "sphinx_copybutton",
 ]
 
 # apidoc
-apidoc_module_dir = '../maup'
-apidoc_output_dir = 'reference/api'
-apidoc_excluded_paths = ['tests']
+apidoc_module_dir = "../maup"
+apidoc_output_dir = "reference/api"
+apidoc_excluded_paths = ["tests"]
 apidoc_separate_modules = True
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
-pygments_style = 'sphinx'
+pygments_style = "sphinx"
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -92,7 +92,7 @@ html_static_path = ["_static"]
 #
 # html_sidebars = {}
 html_css_files = [
-    'css/custom.css',
+    "css/custom.css",
 ]
 
 

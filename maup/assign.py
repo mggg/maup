@@ -1,8 +1,13 @@
 import pandas
+import warnings
 
 from .indexed_geometries import IndexedGeometries
 from .intersections import intersections
 from .crs import require_same_crs
+
+
+class AssigmentWarning(UserWarning):
+    """Warning raised when some source geometries are not assigned to any target."""
 
 
 @require_same_crs
@@ -11,21 +16,24 @@ def assign(sources, targets):
     target that covers it, or, if no target covers the entire source, the
     target that covers the most of its area.
     """
-    assignment = pandas.Series(
-        assign_by_covering(sources, targets),
-        dtype="float"
-    )
+    assignment = pandas.Series(assign_by_covering(sources, targets), dtype="float")
     assignment.name = None
     unassigned = sources[assignment.isna()]
 
     if len(unassigned):  # skip if done
         assignments_by_area = pandas.Series(
-            assign_by_area(unassigned, targets),
-            dtype="float"
+            assign_by_area(unassigned, targets), dtype="float"
         )
         assignment.update(assignments_by_area)
 
-    # TODO: add a warning here if there are still unassigned source geometries.
+    # Warn here if there are still unassigned source geometries.
+    unassigned = sources[assignment.isna()]
+    if len(unassigned):  # skip if done
+        warnings.warn(
+            "Warning: Some units in the source geometry were unassigned.",
+            AssigmentWarning,
+        )
+
     return assignment.astype(targets.index.dtype, errors="ignore")
 
 

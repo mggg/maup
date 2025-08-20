@@ -29,7 +29,10 @@ def iter_adjacencies(geometries):
 def adjacencies(
     geometries,
     adjacency_type="rook",
-    output_type="geoseries", *, warn_for_overlaps=True, warn_for_islands=True
+    output_type="geoseries",
+    *,
+    warn_for_overlaps=True,
+    warn_for_islands=True
 ):
     """Returns adjacencies between geometries.
     The default return type is a
@@ -56,7 +59,9 @@ def adjacencies(
         index, geoms = [[], []]
 
     if output_type == "geodataframe":
-        inters = GeoDataFrame({"neighbors" : index, "geometry" : geoms}, crs = geometries.crs)
+        inters = GeoDataFrame(
+            {"neighbors": index, "geometry": geoms}, crs=geometries.crs
+        )
     else:
         inters = GeoSeries(geoms, index=index, crs=geometries.crs)
 
@@ -75,9 +80,13 @@ def adjacencies(
 
     if warn_for_islands:
         if output_type == "geodataframe":
-            islands = set(geometries.index) - set(i for pair in inters["neighbors"] for i in pair)
+            islands = set(geometries.index) - set(
+                i for pair in inters["neighbors"] for i in pair
+            )
         else:
-            islands = set(geometries.index) - set(i for pair in inters.index for i in pair)
+            islands = set(geometries.index) - set(
+                i for pair in inters.index for i in pair
+            )
         if len(islands) > 0:
             warnings.warn(
                 "Found islands.\n" "Indices of islands: {}".format(islands),
