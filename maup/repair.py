@@ -11,7 +11,7 @@ from shapely.geometry import (
     MultiLineString,
     GeometryCollection,
 )
-from shapely.ops import unary_union
+from shapely import union_all
 
 from .adjacencies import adjacencies
 from .assign import assign_to_max
@@ -81,7 +81,7 @@ def holes_of_union(geometries):
             f"Must be a Polygon or MultiPolygon (got types {set([x.geom_type for x in geometries])})!"
         )
 
-    union = unary_union(geometries)
+    union = union_all(geometries)
     series = holes(union)
     series.crs = geometries.crs
     return series
@@ -164,7 +164,7 @@ def resolve_overlaps(geometries, relative_threshold=0.1, force_polygons=False):
         pandas.concat([overlaps.droplevel(1), overlaps.droplevel(0)]), crs=overlaps.crs
     )
     with_overlaps_removed = geometries.apply(
-        lambda x: x.difference(unary_union(to_remove))
+        lambda x: x.difference(union_all(to_remove))
     )
 
     return absorb_by_shared_perimeter(
@@ -263,7 +263,7 @@ def crop_to(source, target):
     """
     Crops the source geometries to the target geometries.
     """
-    target_union = unary_union(get_geometries(target))
+    target_union = union_all(get_geometries(target))
     cropped_geometries = get_geometries(source).apply(
         lambda x: x.intersection(target_union)
     )
@@ -291,7 +291,7 @@ def expand_to(source, target, force_polygons=False):
     else:
         geometries = get_geometries(source).make_valid()
 
-    source_union = unary_union(geometries)
+    source_union = union_all(geometries)
 
     leftover_geometries = get_geometries(target).apply(lambda x: x - source_union)
     leftover_geometries = leftover_geometries[~leftover_geometries.is_empty].explode(
@@ -322,14 +322,14 @@ def doctor(source, target=None, silent=False, accept_holes=False):
     False. (Default is accept_holes = False.)
     """
     shapefiles = [source]
-    source_union = unary_union(get_geometries(source))
+    source_union = union_all(get_geometries(source))
 
     health_check = True
 
     if target is not None:
         shapefiles.append(target)
 
-        target_union = unary_union(get_geometries(target))
+        target_union = union_all(get_geometries(target))
         sym_area = target_union.symmetric_difference(source_union).area
 
         if sym_area != 0:
@@ -484,7 +484,7 @@ def absorb_by_shared_perimeter(
         assignment = assignment[under_threshold]
 
     sources_to_absorb = GeoSeries(
-        sources.groupby(assignment).apply(unary_union),
+        sources.groupby(assignment).apply(union_all),
         crs=sources.crs,
     )
 

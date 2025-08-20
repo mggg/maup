@@ -7,9 +7,9 @@ import pandas
 import shapely
 
 from geopandas import GeoSeries, GeoDataFrame
-from shapely import make_valid, extract_unique_points
+from shapely import make_valid, extract_unique_points, union_all
 from shapely.strtree import STRtree
-from shapely.ops import unary_union, polygonize, linemerge, nearest_points
+from shapely.ops import polygonize, linemerge, nearest_points
 from shapely.geometry import (
     Polygon,
     MultiPolygon,
@@ -151,7 +151,7 @@ def smart_repair(
         if geometries_df.loc[i, "geometry"] is None:
             geometries_df.loc[i, "geometry"] = Polygon()
         if geometries_df.loc[i, "geometry"].geom_type == "GeometryCollection":
-            geometries_df.loc[i, "geometry"] = unary_union(
+            geometries_df.loc[i, "geometry"] = union_all(
                 [
                     x
                     for x in geometries_df.loc[i, "geometry"].geoms
@@ -193,7 +193,7 @@ def smart_repair(
                 geometries_df.loc[i, "geometry"]
             )
             if geometries_df.loc[i, "geometry"].geom_type == "GeometryCollection":
-                geometries_df.loc[i, "geometry"] = unary_union(
+                geometries_df.loc[i, "geometry"] = union_all(
                     [
                         x
                         for x in geometries_df.loc[i, "geometry"].geoms
@@ -206,7 +206,7 @@ def smart_repair(
                     regions_df.loc[i, "geometry"]
                 )
                 if regions_df.loc[i, "geometry"].geom_type == "GeometryCollection":
-                    regions_df.loc[i, "geometry"] = unary_union(
+                    regions_df.loc[i, "geometry"] = union_all(
                         [
                             x
                             for x in regions_df.loc[i, "geometry"].geoms
@@ -439,7 +439,7 @@ def smart_repair(
                             )[-1]
                             poly_to_add_to = max_shared_perim[0]
                             reconstructed_df.loc[poly_to_add_to, "geometry"] = (
-                                unary_union(
+                                union_all(
                                     [
                                         reconstructed_df.loc[
                                             poly_to_add_to, "geometry"
@@ -689,7 +689,7 @@ def building_blocks(geometries_df, snap_magnitude=None, nest_within_regions=None
         for r_ind in regions_df.index:
             this_region_holes_df = holes_df[holes_df["region"] == r_ind]
             this_region_consolidated_holes = (
-                GeoSeries([unary_union(this_region_holes_df["geometry"])])
+                GeoSeries([union_all(this_region_holes_df["geometry"])])
                 .explode(index_parts=False)
                 .reset_index(drop=True)
             )
@@ -713,7 +713,7 @@ def building_blocks(geometries_df, snap_magnitude=None, nest_within_regions=None
     else:
         # Do the same thing we did for holes within each region to consolidate them:
         all_consolidated_holes = (
-            GeoSeries([unary_union(holes_df["geometry"])])
+            GeoSeries([union_all(holes_df["geometry"])])
             .explode(index_parts=False)
             .reset_index(drop=True)
         )
@@ -766,7 +766,7 @@ def reconstruct_from_overlap_tower(geometries_df, overlap_tower, nested=False):
     for ind in overlap_tower[0].index:
         this_poly_ind = list(overlap_tower[0]["polygon indices"][ind])[0]
         this_piece = overlap_tower[0]["geometry"][ind]
-        geometries_df.loc[this_poly_ind, "geometry"] = unary_union(
+        geometries_df.loc[this_poly_ind, "geometry"] = union_all(
             [geometries_df.loc[this_poly_ind, "geometry"], this_piece]
         )
 
@@ -849,7 +849,7 @@ def reconstruct_from_overlap_tower(geometries_df, overlap_tower, nested=False):
                             overlaps_df.loc[o_ind, "geometry"]
                         )
                     ).length > 0:
-                        geometries_disconnected_df.loc[g_ind, "geometry"] = unary_union(
+                        geometries_disconnected_df.loc[g_ind, "geometry"] = union_all(
                             [
                                 geometries_disconnected_df.loc[g_ind, "geometry"],
                                 overlaps_df.loc[o_ind, "geometry"],
@@ -907,7 +907,7 @@ def reconstruct_from_overlap_tower(geometries_df, overlap_tower, nested=False):
             if len(shared_perimeters) > 0:
                 max_shared_perim = sorted(shared_perimeters, key=lambda tup: tup[1])[-1]
                 poly_to_add_to = max_shared_perim[0]
-                geometries_df.loc[poly_to_add_to, "geometry"] = unary_union(
+                geometries_df.loc[poly_to_add_to, "geometry"] = union_all(
                     [geometries_df.loc[poly_to_add_to, "geometry"], this_overlap]
                 )
 
@@ -949,7 +949,7 @@ def reconstruct_from_overlap_tower(geometries_df, overlap_tower, nested=False):
             if len(shared_perimeters) > 0:
                 max_shared_perim = sorted(shared_perimeters, key=lambda tup: tup[1])[-1]
                 poly_to_add_to = max_shared_perim[0]
-                geometries_df.loc[poly_to_add_to, "geometry"] = unary_union(
+                geometries_df.loc[poly_to_add_to, "geometry"] = union_all(
                     [geometries_df.loc[poly_to_add_to, "geometry"], this_overlap]
                 )
 
@@ -1087,7 +1087,7 @@ def smart_close_gaps(geometries_df, holes_df):
             poly_to_add_to = list(
                 set(this_hole_boundaries_df["target"]).difference({-1})
             )[0]
-            geometries_df.loc[poly_to_add_to, "geometry"] = unary_union(
+            geometries_df.loc[poly_to_add_to, "geometry"] = union_all(
                 [geometries_df.loc[poly_to_add_to, "geometry"], this_hole]
             )
 
@@ -1109,7 +1109,7 @@ def smart_close_gaps(geometries_df, holes_df):
                             ]
                         )
                     )
-                    geometries_df.loc[g_ind, "geometry"] = unary_union(
+                    geometries_df.loc[g_ind, "geometry"] = union_all(
                         [geometries_df.loc[g_ind, "geometry"], this_segment_poly_to_add]
                     )
 
@@ -1130,7 +1130,7 @@ def smart_close_gaps(geometries_df, holes_df):
                     poly_to_add_to = touching_geoms[0]
                 else:
                     poly_to_add_to = touching_geoms[1]
-                geometries_df.loc[poly_to_add_to, "geometry"] = unary_union(
+                geometries_df.loc[poly_to_add_to, "geometry"] = union_all(
                     [geometries_df.loc[poly_to_add_to, "geometry"], this_hole]
                 )
 
@@ -1207,24 +1207,20 @@ def smart_close_gaps(geometries_df, holes_df):
 
                     if nearest_point_position == 0:
                         # Add the entire hole to target_geometries[1].
-                        geometries_df.loc[target_geometries[1], "geometry"] = (
-                            unary_union(
-                                [
-                                    geometries_df.loc[target_geometries[1], "geometry"],
-                                    this_hole,
-                                ]
-                            )
+                        geometries_df.loc[target_geometries[1], "geometry"] = union_all(
+                            [
+                                geometries_df.loc[target_geometries[1], "geometry"],
+                                this_hole,
+                            ]
                         )
 
                     elif nearest_point_position == len(ext_boundary_points) - 1:
                         # Add the entire hole to target_geometries[2].
-                        geometries_df.loc[target_geometries[2], "geometry"] = (
-                            unary_union(
-                                [
-                                    geometries_df.loc[target_geometries[2], "geometry"],
-                                    this_hole,
-                                ]
-                            )
+                        geometries_df.loc[target_geometries[2], "geometry"] = union_all(
+                            [
+                                geometries_df.loc[target_geometries[2], "geometry"],
+                                this_hole,
+                            ]
                         )
 
                     else:
@@ -1238,7 +1234,7 @@ def smart_close_gaps(geometries_df, holes_df):
                             )
                         )
 
-                        poly1_to_add_boundary = unary_union(
+                        poly1_to_add_boundary = union_all(
                             [
                                 this_hole_boundaries[1],
                                 sp,
@@ -1248,16 +1244,14 @@ def smart_close_gaps(geometries_df, holes_df):
                             ]
                         )
                         poly1_to_add = polygonize(poly1_to_add_boundary)[0]
-                        geometries_df.loc[target_geometries[1], "geometry"] = (
-                            unary_union(
-                                [
-                                    geometries_df.loc[target_geometries[1], "geometry"],
-                                    poly1_to_add,
-                                ]
-                            )
+                        geometries_df.loc[target_geometries[1], "geometry"] = union_all(
+                            [
+                                geometries_df.loc[target_geometries[1], "geometry"],
+                                poly1_to_add,
+                            ]
                         )
 
-                        poly2_to_add_boundary = unary_union(
+                        poly2_to_add_boundary = union_all(
                             [
                                 this_hole_boundaries[2],
                                 sp,
@@ -1267,13 +1261,11 @@ def smart_close_gaps(geometries_df, holes_df):
                             ]
                         )
                         poly2_to_add = polygonize(poly2_to_add_boundary)[0]
-                        geometries_df.loc[target_geometries[2], "geometry"] = (
-                            unary_union(
-                                [
-                                    geometries_df.loc[target_geometries[2], "geometry"],
-                                    poly2_to_add,
-                                ]
-                            )
+                        geometries_df.loc[target_geometries[2], "geometry"] = union_all(
+                            [
+                                geometries_df.loc[target_geometries[2], "geometry"],
+                                poly2_to_add,
+                            ]
                         )
 
                 # Otherwise, construct the incenter of the circumscribing triangle.
@@ -1306,7 +1298,7 @@ def smart_close_gaps(geometries_df, holes_df):
                             for point in incenter_triangle_vertices
                         ]
                         this_hole_partition = polygonize(
-                            unary_union([this_hole.boundary] + incenter_segments)
+                            union_all([this_hole.boundary] + incenter_segments)
                         )
 
                         paths_to_main_vertices = []
@@ -1326,7 +1318,7 @@ def smart_close_gaps(geometries_df, holes_df):
                                 )
                             )
 
-                        poly0_to_add_boundary = unary_union(
+                        poly0_to_add_boundary = union_all(
                             [
                                 this_hole_boundaries[0],
                                 paths_to_main_vertices[0],
@@ -1334,16 +1326,14 @@ def smart_close_gaps(geometries_df, holes_df):
                             ]
                         )
                         poly0_to_add = polygonize(poly0_to_add_boundary)[0]
-                        geometries_df.loc[target_geometries[0], "geometry"] = (
-                            unary_union(
-                                [
-                                    geometries_df.loc[target_geometries[0], "geometry"],
-                                    poly0_to_add,
-                                ]
-                            )
+                        geometries_df.loc[target_geometries[0], "geometry"] = union_all(
+                            [
+                                geometries_df.loc[target_geometries[0], "geometry"],
+                                poly0_to_add,
+                            ]
                         )
 
-                        poly1_to_add_boundary = unary_union(
+                        poly1_to_add_boundary = union_all(
                             [
                                 this_hole_boundaries[1],
                                 paths_to_main_vertices[1],
@@ -1351,16 +1341,14 @@ def smart_close_gaps(geometries_df, holes_df):
                             ]
                         )
                         poly1_to_add = polygonize(poly1_to_add_boundary)[0]
-                        geometries_df.loc[target_geometries[1], "geometry"] = (
-                            unary_union(
-                                [
-                                    geometries_df.loc[target_geometries[1], "geometry"],
-                                    poly1_to_add,
-                                ]
-                            )
+                        geometries_df.loc[target_geometries[1], "geometry"] = union_all(
+                            [
+                                geometries_df.loc[target_geometries[1], "geometry"],
+                                poly1_to_add,
+                            ]
                         )
 
-                        poly2_to_add_boundary = unary_union(
+                        poly2_to_add_boundary = union_all(
                             [
                                 this_hole_boundaries[2],
                                 paths_to_main_vertices[2],
@@ -1368,13 +1356,11 @@ def smart_close_gaps(geometries_df, holes_df):
                             ]
                         )
                         poly2_to_add = polygonize(poly2_to_add_boundary)[0]
-                        geometries_df.loc[target_geometries[2], "geometry"] = (
-                            unary_union(
-                                [
-                                    geometries_df.loc[target_geometries[2], "geometry"],
-                                    poly2_to_add,
-                                ]
-                            )
+                        geometries_df.loc[target_geometries[2], "geometry"] = union_all(
+                            [
+                                geometries_df.loc[target_geometries[2], "geometry"],
+                                poly2_to_add,
+                            ]
                         )
 
                     else:
@@ -1412,11 +1398,11 @@ def smart_close_gaps(geometries_df, holes_df):
 
                         # if nearest_point_position == 0:
                         #    # Add the entire hole to target_geometries[1].
-                        #    geometries_df.loc[target_geometries[1], "geometry"] = unary_union([geometries_df.loc[target_geometries[1], "geometry"], this_hole])
+                        #    geometries_df.loc[target_geometries[1], "geometry"] = union_all([geometries_df.loc[target_geometries[1], "geometry"], this_hole])
 
                         # elif nearest_point_position == len(ext_boundary_points) - 1:
                         #    # Add the entire hole to target_geometries[2].
-                        #    geometries_df.loc[target_geometries[2], "geometry"] = unary_union([geometries_df.loc[target_geometries[2], "geometry"], this_hole])
+                        #    geometries_df.loc[target_geometries[2], "geometry"] = union_all([geometries_df.loc[target_geometries[2], "geometry"], this_hole])
 
                         # else:
 
@@ -1430,7 +1416,7 @@ def smart_close_gaps(geometries_df, holes_df):
                             )
                         )
 
-                        poly1_to_add_boundary = unary_union(
+                        poly1_to_add_boundary = union_all(
                             [
                                 this_hole_boundaries[1],
                                 sp,
@@ -1440,16 +1426,14 @@ def smart_close_gaps(geometries_df, holes_df):
                             ]
                         )
                         poly1_to_add = polygonize(poly1_to_add_boundary)[0]
-                        geometries_df.loc[target_geometries[1], "geometry"] = (
-                            unary_union(
-                                [
-                                    geometries_df.loc[target_geometries[1], "geometry"],
-                                    poly1_to_add,
-                                ]
-                            )
+                        geometries_df.loc[target_geometries[1], "geometry"] = union_all(
+                            [
+                                geometries_df.loc[target_geometries[1], "geometry"],
+                                poly1_to_add,
+                            ]
                         )
 
-                        poly2_to_add_boundary = unary_union(
+                        poly2_to_add_boundary = union_all(
                             [
                                 this_hole_boundaries[2],
                                 sp,
@@ -1459,13 +1443,11 @@ def smart_close_gaps(geometries_df, holes_df):
                             ]
                         )
                         poly2_to_add = polygonize(poly2_to_add_boundary)[0]
-                        geometries_df.loc[target_geometries[2], "geometry"] = (
-                            unary_union(
-                                [
-                                    geometries_df.loc[target_geometries[2], "geometry"],
-                                    poly2_to_add,
-                                ]
-                            )
+                        geometries_df.loc[target_geometries[2], "geometry"] = union_all(
+                            [
+                                geometries_df.loc[target_geometries[2], "geometry"],
+                                poly2_to_add,
+                            ]
                         )
 
             else:  # If len(this_hole_boundaries_df) >= 4
@@ -1582,7 +1564,7 @@ def smart_close_gaps(geometries_df, holes_df):
                                     if poly_to_add.area > 0:
                                         found_triangles = True
                                         geometries_df.loc[geom_int, "geometry"] = (
-                                            unary_union(
+                                            union_all(
                                                 [
                                                     geometries_df.loc[
                                                         geom_int, "geometry"
@@ -1733,7 +1715,7 @@ def smart_close_gaps(geometries_df, holes_df):
                                         == 0
                                     ):
                                         geometries_df.loc[geom1, "geometry"] = (
-                                            unary_union(
+                                            union_all(
                                                 [
                                                     geometries_df.loc[
                                                         geom1, "geometry"
@@ -1766,7 +1748,7 @@ def smart_close_gaps(geometries_df, holes_df):
                                         > 0
                                     ):
                                         geometries_df.loc[geom2, "geometry"] = (
-                                            unary_union(
+                                            union_all(
                                                 [
                                                     geometries_df.loc[
                                                         geom2, "geometry"
@@ -1785,7 +1767,7 @@ def smart_close_gaps(geometries_df, holes_df):
 
                                     elif geom1 == geom2:
                                         geometries_df.loc[geom1, "geometry"] = (
-                                            unary_union(
+                                            union_all(
                                                 [
                                                     geometries_df.loc[
                                                         geom1, "geometry"
@@ -1839,7 +1821,7 @@ def smart_close_gaps(geometries_df, holes_df):
                                         ).length
                                         if perim1 > perim2:
                                             geometries_df.loc[geom1, "geometry"] = (
-                                                unary_union(
+                                                union_all(
                                                     [
                                                         geometries_df.loc[
                                                             geom1, "geometry"
@@ -1857,7 +1839,7 @@ def smart_close_gaps(geometries_df, holes_df):
                                             ]
                                         else:
                                             geometries_df.loc[geom2, "geometry"] = (
-                                                unary_union(
+                                                union_all(
                                                     [
                                                         geometries_df.loc[
                                                             geom2, "geometry"
@@ -1924,7 +1906,7 @@ def smart_close_gaps(geometries_df, holes_df):
                             shared_perimeters, key=lambda tup: tup[1]
                         )[-1]
                         poly_to_add_to = max_shared_perim[0]
-                        geometries_df.loc[poly_to_add_to, "geometry"] = unary_union(
+                        geometries_df.loc[poly_to_add_to, "geometry"] = union_all(
                             [geometries_df.loc[poly_to_add_to, "geometry"], this_hole]
                         )
 
@@ -2002,7 +1984,7 @@ def small_rook_to_queen(geometries_df, min_rook_length):
         polys_to_remove_list = disks_to_remove_list
         polys_to_remove_complete = False
         while polys_to_remove_complete is False:
-            all_polys_to_remove = unary_union(polys_to_remove_list)
+            all_polys_to_remove = union_all(polys_to_remove_list)
             if (
                 all_polys_to_remove.geom_type == "Polygon"
             ):  # if it's all one big polygon now
@@ -2016,11 +1998,11 @@ def small_rook_to_queen(geometries_df, min_rook_length):
 
             if len(convex_polys_to_remove_list) == 1:
                 polys_to_remove_complete = True
-            elif unary_union(convex_polys_to_remove_list).geom_type == "MultiPolygon":
+            elif union_all(convex_polys_to_remove_list).geom_type == "MultiPolygon":
                 # Note that if the unary union is a Polygon, then this next condition
                 # below can't hold anyway and we want polys_to_remove_complete to remain
                 # False.
-                if len(unary_union(convex_polys_to_remove_list).geoms) == len(
+                if len(union_all(convex_polys_to_remove_list).geoms) == len(
                     convex_polys_to_remove_list
                 ):
                     polys_to_remove_complete = True
@@ -2099,7 +2081,7 @@ def small_rook_to_queen(geometries_df, min_rook_length):
                     .representative_point()
                     .intersects(poly_to_remove)
                 ):
-                    poly_to_remove_refined = unary_union(
+                    poly_to_remove_refined = union_all(
                         [poly_to_remove_refined, pieces_df.loc[p_ind, "geometry"]]
                     )
                     pieces_df_indices_to_drop.append(p_ind)
@@ -2119,7 +2101,7 @@ def small_rook_to_queen(geometries_df, min_rook_length):
                         # This check is needed because the geometries in possible_geom_incides can form a
                         # non-simply-connected region, in which case the interior holes - which may consist
                         # of multiple geometries each - may be assigned someplace they shouldn't be!
-                        geometries_df.loc[this_poly_ind, "geometry"] = unary_union(
+                        geometries_df.loc[this_poly_ind, "geometry"] = union_all(
                             [geometries_df.loc[this_poly_ind, "geometry"], this_piece]
                         )
 
@@ -2163,7 +2145,7 @@ def small_rook_to_queen(geometries_df, min_rook_length):
 
                 g_ind = poly_to_remove_boundaries_df.loc[b_ind, "target"]
 
-                geometries_df.loc[g_ind, "geometry"] = unary_union(
+                geometries_df.loc[g_ind, "geometry"] = union_all(
                     [
                         geometries_df.loc[g_ind, "geometry"],
                         Polygon(boundary_wedge_coords),
@@ -2473,7 +2455,7 @@ def shortest_path_in_polygon(polygon, start, end, full_triangulation=None):
 
         # Regard the sleeve given by the union of these triangles as the "simplified"
         # polygon; the shortest path must be contained in this simplfied polygon.
-        polygon_simplified = unary_union(ordered_triangulation)
+        polygon_simplified = union_all(ordered_triangulation)
 
         # Now use the ordered triangulation to order the vertices of the simplified polygon,
         # as well as the left and right paths restricted to the simplified polygon.
@@ -2671,7 +2653,7 @@ def convexify_hole_boundaries(geometries_df, holes_df):
             poly_to_add_to = list(
                 set(this_hole_boundaries_df["target"]).difference({-1})
             )[0]
-            geometries_df.loc[poly_to_add_to, "geometry"] = unary_union(
+            geometries_df.loc[poly_to_add_to, "geometry"] = union_all(
                 [geometries_df.loc[poly_to_add_to, "geometry"], this_hole]
             )
 
@@ -2728,9 +2710,9 @@ def convexify_hole_boundaries(geometries_df, holes_df):
 
                     polys_to_add_boundary = shapely.node(MultiLineString([thb, sp]))
                     hole_partition_boundary = shapely.node(
-                        unary_union([new_hole_in_progress.boundary, sp])
+                        union_all([new_hole_in_progress.boundary, sp])
                     )
-                    # piece_to_add_boundary = unary_union([thb, sp])
+                    # piece_to_add_boundary = union_all([thb, sp])
                     # if piece_to_add_boundary.geom_type == "MultiLineString":
                     #    piece_to_add_boundary = linemerge(piece_to_add_boundary)
 
@@ -2738,7 +2720,7 @@ def convexify_hole_boundaries(geometries_df, holes_df):
                     hole_partition_polys = polygonize(hole_partition_boundary)
 
                     for poly_to_add in polys_to_add:
-                        geometries_df.loc[this_geom, "geometry"] = unary_union(
+                        geometries_df.loc[this_geom, "geometry"] = union_all(
                             [geometries_df.loc[this_geom, "geometry"], poly_to_add]
                         )
                         hole_partition_polys = [
@@ -2747,10 +2729,10 @@ def convexify_hole_boundaries(geometries_df, holes_df):
                             if not contain_each_other(poly, poly_to_add)
                         ]
 
-                    new_hole_in_progress = unary_union(hole_partition_polys)
+                    new_hole_in_progress = union_all(hole_partition_polys)
 
-                    # piece_to_add = unary_union(polygonize(piece_to_add_boundary))
-                    # geometries_df.loc[this_geom, "geometry"] = unary_union([geometries_df.loc[this_geom, "geometry"], piece_to_add])
+                    # piece_to_add = union_all(polygonize(piece_to_add_boundary))
+                    # geometries_df.loc[this_geom, "geometry"] = union_all([geometries_df.loc[this_geom, "geometry"], piece_to_add])
                     # new_hole_in_progress = new_hole_in_progress.difference(piece_to_add)
 
             if not new_hole_in_progress.is_empty:
