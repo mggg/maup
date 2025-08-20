@@ -26,7 +26,9 @@ def test_indexed_has_a_spatial_index(four_square_grid):
 def test_indexed_queries_its_spatial_index_when_intersections_is_called(
     four_square_grid, square
 ):
-    with patch("maup.indexed_geometries.STRtree.query",) as query_fn:
+    with patch(
+        "maup.indexed_geometries.STRtree.query",
+    ) as query_fn:
         query_fn.return_value = np.array([])
         IndexedGeometries(four_square_grid).intersections(square)
         query_fn.assert_called()
@@ -50,7 +52,10 @@ def test_intersections_correct_when_all_overlapping(four_square_grid, square):
         assert any(overlap.intersection(p).area == p.area for overlap in overlaps)
 
     for p in overlaps:
-        assert any(p.intersection(expected).area == expected.area for expected in expected_polygons)
+        assert any(
+            p.intersection(expected).area == expected.area
+            for expected in expected_polygons
+        )
 
 
 def test_returns_empty_when_no_overlaps(four_square_grid, distant_polygon):

@@ -4,7 +4,13 @@ import warnings
 import pandas
 
 from geopandas import GeoSeries
-from shapely.geometry import Polygon, MultiPolygon, LineString, MultiLineString, GeometryCollection
+from shapely.geometry import (
+    Polygon,
+    MultiPolygon,
+    LineString,
+    MultiLineString,
+    GeometryCollection,
+)
 from shapely.ops import unary_union
 
 from .adjacencies import adjacencies
@@ -57,8 +63,9 @@ def trim_valid(value):
     """
     if isinstance(value, GeometryCollection):
         # List comprehension excluding non-Polygons
-        value = [item for item in value.geoms
-                 if isinstance(item, (Polygon, MultiPolygon))]
+        value = [
+            item for item in value.geoms if isinstance(item, (Polygon, MultiPolygon))
+        ]
         # Re-aggregegating multiple Polygons into single MultiPolygon object.
         value = value[0] if len(value) == 1 else MultiPolygon(value)
     return value
@@ -70,7 +77,9 @@ def holes_of_union(geometries):
     if not all(
         isinstance(geometry, (Polygon, MultiPolygon)) for geometry in geometries
     ):
-        raise TypeError(f"Must be a Polygon or MultiPolygon (got types {set([x.geom_type for x in geometries])})!")
+        raise TypeError(
+            f"Must be a Polygon or MultiPolygon (got types {set([x.geom_type for x in geometries])})!"
+        )
 
     union = unary_union(geometries)
     series = holes(union)
@@ -111,7 +120,10 @@ def close_gaps(geometries, relative_threshold=0.1, force_polygons=False):
     geometries = get_geometries(geometries)
     gaps = holes_of_union(geometries)
     return absorb_by_shared_perimeter(
-        gaps, geometries, relative_threshold=relative_threshold, force_polygons=force_polygons
+        gaps,
+        geometries,
+        relative_threshold=relative_threshold,
+        force_polygons=force_polygons,
     )
 
 
@@ -151,10 +163,15 @@ def resolve_overlaps(geometries, relative_threshold=0.1, force_polygons=False):
     to_remove = GeoSeries(
         pandas.concat([overlaps.droplevel(1), overlaps.droplevel(0)]), crs=overlaps.crs
     )
-    with_overlaps_removed = geometries.apply(lambda x: x.difference(unary_union(to_remove)))
+    with_overlaps_removed = geometries.apply(
+        lambda x: x.difference(unary_union(to_remove))
+    )
 
     return absorb_by_shared_perimeter(
-        overlaps, with_overlaps_removed, relative_threshold=None, force_polygons=force_polygons
+        overlaps,
+        with_overlaps_removed,
+        relative_threshold=None,
+        force_polygons=force_polygons,
     )
 
 
@@ -172,7 +189,9 @@ def quick_repair(geometries, relative_threshold=0.1, force_polygons=False):
     For a more careful repair that takes adjacencies and higher-order overlaps
     between geometries into account, consider using smart_repair instead.
     """
-    return autorepair(geometries, relative_threshold=relative_threshold, force_polygons=force_polygons)
+    return autorepair(
+        geometries, relative_threshold=relative_threshold, force_polygons=force_polygons
+    )
 
 
 def autorepair(geometries, relative_threshold=0.1, force_polygons=False):
@@ -194,16 +213,28 @@ def autorepair(geometries, relative_threshold=0.1, force_polygons=False):
 
     if force_polygons:
         geometries = make_valid_polygons(remove_repeated_vertices(geometries))
-        geometries = make_valid_polygons(resolve_overlaps(geometries,
-                                                          relative_threshold=relative_threshold,
-                                                          force_polygons=force_polygons))
-        geometries = make_valid_polygons(close_gaps(geometries,
-                                                    relative_threshold=relative_threshold,
-                                                    force_polygons=force_polygons))
+        geometries = make_valid_polygons(
+            resolve_overlaps(
+                geometries,
+                relative_threshold=relative_threshold,
+                force_polygons=force_polygons,
+            )
+        )
+        geometries = make_valid_polygons(
+            close_gaps(
+                geometries,
+                relative_threshold=relative_threshold,
+                force_polygons=force_polygons,
+            )
+        )
     else:
         geometries = remove_repeated_vertices(geometries).make_valid()
-        geometries = resolve_overlaps(geometries, relative_threshold=relative_threshold).make_valid()
-        geometries = close_gaps(geometries, relative_threshold=relative_threshold).make_valid()
+        geometries = resolve_overlaps(
+            geometries, relative_threshold=relative_threshold
+        ).make_valid()
+        geometries = close_gaps(
+            geometries, relative_threshold=relative_threshold
+        ).make_valid()
 
     return geometries
 
@@ -213,7 +244,9 @@ def remove_repeated_vertices(geometries):
     Removes repeated vertices. Vertices are considered to be repeated if they
     appear consecutively, excluding the start and end points.
     """
-    return geometries.geometry.apply(lambda x: apply_func_to_polygon_parts(x, dedup_vertices))
+    return geometries.geometry.apply(
+        lambda x: apply_func_to_polygon_parts(x, dedup_vertices)
+    )
 
 
 def snap_to_grid(geometries, n=-7):
@@ -231,15 +264,18 @@ def crop_to(source, target):
     Crops the source geometries to the target geometries.
     """
     target_union = unary_union(get_geometries(target))
-    cropped_geometries = get_geometries(source).apply(lambda x: x.intersection(target_union))
+    cropped_geometries = get_geometries(source).apply(
+        lambda x: x.intersection(target_union)
+    )
 
     if (cropped_geometries.area == 0).any():
-        warnings.warn("Some cropped geometries have zero area, likely due to\n" +
-                      "large differences in the union of the geometries in your\n" +
-                      "source and target shapefiles. This may become an issue\n" +
-                      "when maupping.\n",
-                      AreaCroppingWarning
-                      )
+        warnings.warn(
+            "Some cropped geometries have zero area, likely due to\n"
+            + "large differences in the union of the geometries in your\n"
+            + "source and target shapefiles. This may become an issue\n"
+            + "when maupping.\n",
+            AreaCroppingWarning,
+        )
 
     return cropped_geometries
 
@@ -258,10 +294,15 @@ def expand_to(source, target, force_polygons=False):
     source_union = unary_union(geometries)
 
     leftover_geometries = get_geometries(target).apply(lambda x: x - source_union)
-    leftover_geometries = leftover_geometries[~leftover_geometries.is_empty].explode(index_parts=False)
+    leftover_geometries = leftover_geometries[~leftover_geometries.is_empty].explode(
+        index_parts=False
+    )
 
     geometries = absorb_by_shared_perimeter(
-        leftover_geometries, get_geometries(source), relative_threshold=None, force_polygons=force_polygons
+        leftover_geometries,
+        get_geometries(source),
+        relative_threshold=None,
+        force_polygons=force_polygons,
     )
 
     return geometries
@@ -297,7 +338,9 @@ def doctor(source, target=None, silent=False, accept_holes=False):
             health_check = False
 
     for shp in shapefiles:
-        if not shp.geometry.apply(lambda x: isinstance(x, (Polygon, MultiPolygon))).all():
+        if not shp.geometry.apply(
+            lambda x: isinstance(x, (Polygon, MultiPolygon))
+        ).all():
             if silent is False:
                 print("Some rows do not have geometries.")
             health_check = False
@@ -346,7 +389,9 @@ def apply_func_to_polygon_parts(shape, func):
     elif isinstance(shape, MultiPolygon):
         return MultiPolygon([func(poly) for poly in shape.geoms])
     else:
-        raise TypeError(f"Can only apply {func} to a Polygon or MultiPolygon (got {shape} with type {type(shape)})!")
+        raise TypeError(
+            f"Can only apply {func} to a Polygon or MultiPolygon (got {shape} with type {type(shape)})!"
+        )
 
 
 def dedup_vertices(polygon):
@@ -381,16 +426,31 @@ def dedup_vertices(polygon):
 
 def snap_polygon_to_grid(polygon, n=-7):
     if len(polygon.interiors) == 0:
-        return Polygon([(round(x, -n), round(y, -n)) for x, y in polygon.exterior.coords])
+        return Polygon(
+            [(round(x, -n), round(y, -n)) for x, y in polygon.exterior.coords]
+        )
     else:
-        return Polygon([(round(x, -n), round(y, -n)) for x, y in polygon.exterior.coords], holes=[[(round(x, -n), round(y, -n)) for x, y in interior_ring.coords] for interior_ring in polygon.interiors])
+        return Polygon(
+            [(round(x, -n), round(y, -n)) for x, y in polygon.exterior.coords],
+            holes=[
+                [(round(x, -n), round(y, -n)) for x, y in interior_ring.coords]
+                for interior_ring in polygon.interiors
+            ],
+        )
 
 
 def snap_multilinestring_to_grid(multilinestring, n=-7):
     if multilinestring.geom_type == "LineString":
-        return LineString([(round(x, -n), round(y, -n)) for x, y in multilinestring.coords])
+        return LineString(
+            [(round(x, -n), round(y, -n)) for x, y in multilinestring.coords]
+        )
     elif multilinestring.geom_type == "MultiLineString":
-        return MultiLineString([LineString([(round(x, -n), round(y, -n)) for x, y in linestring.coords]) for linestring in multilinestring.geoms])
+        return MultiLineString(
+            [
+                LineString([(round(x, -n), round(y, -n)) for x, y in linestring.coords])
+                for linestring in multilinestring.geoms
+            ]
+        )
 
 
 def split_by_level(series, multiindex):
@@ -401,7 +461,9 @@ def split_by_level(series, multiindex):
 
 
 @require_same_crs
-def absorb_by_shared_perimeter(sources, targets, relative_threshold=None, force_polygons=False):
+def absorb_by_shared_perimeter(
+    sources, targets, relative_threshold=None, force_polygons=False
+):
     if len(sources) == 0:
         return targets
 
@@ -422,7 +484,8 @@ def absorb_by_shared_perimeter(sources, targets, relative_threshold=None, force_
         assignment = assignment[under_threshold]
 
     sources_to_absorb = GeoSeries(
-        sources.groupby(assignment).apply(unary_union), crs=sources.crs,
+        sources.groupby(assignment).apply(unary_union),
+        crs=sources.crs,
     )
 
     # Note that the following line produces a warning message when sources_to_absorb

@@ -12,26 +12,21 @@ def assign(sources, targets):
     target that covers it, or, if no target covers the entire source, the
     target that covers the most of its area.
     """
-    assignment = pandas.Series(
-        assign_by_covering(sources, targets),
-        dtype="float"
-    )
+    assignment = pandas.Series(assign_by_covering(sources, targets), dtype="float")
     assignment.name = None
     unassigned = sources[assignment.isna()]
 
     if len(unassigned):  # skip if done
         assignments_by_area = pandas.Series(
-            assign_by_area(unassigned, targets),
-            dtype="float"
+            assign_by_area(unassigned, targets), dtype="float"
         )
         assignment.update(assignments_by_area)
 
     # Warn here if there are still unassigned source geometries.
     unassigned = sources[assignment.isna()]
     if len(unassigned):  # skip if done
-        warnings.warn("Warning: Some units in the source geometry were unassigned.") 
-    
-    
+        warnings.warn("Warning: Some units in the source geometry were unassigned.")
+
     return assignment.astype(targets.index.dtype, errors="ignore")
 
 

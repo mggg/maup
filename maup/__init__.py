@@ -3,7 +3,15 @@ from .adjacencies import adjacencies
 from .assign import assign
 from .indexed_geometries import IndexedGeometries
 from .intersections import intersections, prorate
-from .repair import close_gaps, resolve_overlaps, quick_repair, snap_to_grid, crop_to, expand_to, doctor
+from .repair import (
+    close_gaps,
+    resolve_overlaps,
+    quick_repair,
+    snap_to_grid,
+    crop_to,
+    expand_to,
+    doctor,
+)
 from .smart_repair import smart_repair
 from .normalize import normalize
 from .progress_bar import progress
@@ -32,5 +40,5 @@ __all__ = [
     "doctor",
     "smart_repair",
     "normalize",
-    "progress"
+    "progress",
 ]

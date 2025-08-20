@@ -37,7 +37,9 @@ def intersections(sources, targets, output_type="geoseries", area_cutoff=None):
         )
     ]
 
-    df = GeoDataFrame(records, columns=["source", "target", "geometry"], crs=sources.crs)
+    df = GeoDataFrame(
+        records, columns=["source", "target", "geometry"], crs=sources.crs
+    )
     df = df.sort_values(by=["source", "target"]).reset_index(drop=True)
 
     geometries = df.set_index(["source", "target"]).geometry

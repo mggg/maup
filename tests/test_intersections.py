@@ -73,9 +73,7 @@ def manually_compute_intersections(sources, targets):
                 records.append((i, j, intersection))
 
     expected = (
-        geopandas.GeoDataFrame(
-            records, columns=["source", "target", "geometry"]
-        )
+        geopandas.GeoDataFrame(records, columns=["source", "target", "geometry"])
         .set_index(["source", "target"])
         .geometry
     )
