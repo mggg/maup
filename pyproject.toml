@@ -24,11 +24,12 @@ exclude = ["examples", "tests"]
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.14"
-numpy = "^2.2.1"
+numpy = "^2.3.2"
 pandas = "^2.3.1"
 geopandas = "^1.1.1"
 Shapely = "^2.1.1"
 tqdm = "^4.67.1"
+pyproj = ">=3.7.2" 
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.4.1"
@@ -40,6 +41,7 @@ myst-parser = "^4.0.1"
 sphinx-copybutton = "^0.5.2"
 sphinx-rtd-theme = "^3.0.2"
 black = "^25.1.0"
+ipykernel = "^6.30.1"
 
 [build-system]
 requires = ["poetry-core>=2.0.0"]
