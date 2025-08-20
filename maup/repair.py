@@ -497,7 +497,9 @@ def absorb_by_shared_perimeter(
 
     # This difference in indices is expected since not all target geometries may have sources
     # to absorb, so it would be nice to remove this warning.
-    result = targets.union(sources_to_absorb)
+    # NOTE: align=True is needed to avoid a warning. This is consistent with what the
+    # function did previously, and was added to make the hidden behaviour more explicit.
+    result = targets.union(sources_to_absorb, align=True)
 
     # The .union call only returns the targets who had a corresponding
     # source to absorb. Now we fill in all of the unchanged targets.

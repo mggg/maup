@@ -2,7 +2,7 @@ import geopandas
 import pandas
 import pytest
 
-from maup import assign, intersections, prorate, normalize
+from maup import assign, intersections, prorate, normalize, AssigmentWarning
 
 
 @pytest.fixture
@@ -85,8 +85,13 @@ def test_example_case():
     # like boundary intersections, which we do not want to include in
     # our proration.
     pieces = intersections(old_precincts, new_precincts, area_cutoff=0)
-    # Weight by prorated population from blocks
-    weights = blocks["TOTPOP"].groupby(assign(blocks, pieces)).sum()
+
+    with pytest.warns(
+        AssigmentWarning, match="Some units in the source geometry were unassigned."
+    ):
+        # Weight by prorated population from blocks
+        weights = blocks["TOTPOP"].groupby(assign(blocks, pieces)).sum()
+
     weights = normalize(weights, level=0)
     # Use blocks to estimate population of each piece
     new_precincts[columns] = prorate(pieces, old_precincts[columns], weights=weights)

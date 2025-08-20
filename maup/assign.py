@@ -6,6 +6,10 @@ from .intersections import intersections
 from .crs import require_same_crs
 
 
+class AssigmentWarning(UserWarning):
+    """Warning raised when some source geometries are not assigned to any target."""
+
+
 @require_same_crs
 def assign(sources, targets):
     """Assign source geometries to targets. A source is assigned to the
@@ -25,7 +29,10 @@ def assign(sources, targets):
     # Warn here if there are still unassigned source geometries.
     unassigned = sources[assignment.isna()]
     if len(unassigned):  # skip if done
-        warnings.warn("Warning: Some units in the source geometry were unassigned.")
+        warnings.warn(
+            "Warning: Some units in the source geometry were unassigned.",
+            AssigmentWarning,
+        )
 
     return assignment.astype(targets.index.dtype, errors="ignore")
 

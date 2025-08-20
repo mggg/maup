@@ -1,6 +1,6 @@
 import geopandas
 from .adjacencies import adjacencies
-from .assign import assign
+from .assign import assign, AssigmentWarning
 from .indexed_geometries import IndexedGeometries
 from .intersections import intersections, prorate
 from .repair import (
@@ -24,9 +24,10 @@ if geopandas.options.use_pygeos:
         "`geopandas.options.use_pygeos = False` before importing your shapefile."
     )
 
-__version__ = "2.0.2"
+__version__ = "2.0.3"
 __all__ = [
     "adjacencies",
+    "AssigmentWarning",
     "assign",
     "IndexedGeometries",
     "intersections",
