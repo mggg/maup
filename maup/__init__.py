@@ -1,3 +1,5 @@
+from importlib.metadata import version as _distribution_version
+
 import geopandas
 from .adjacencies import adjacencies
 from .assign import assign, AssigmentWarning
@@ -24,7 +26,7 @@ if geopandas.options.use_pygeos:
         "`geopandas.options.use_pygeos = False` before importing your shapefile."
     )
 
-__version__ = "2.0.3"
+__version__ = _distribution_version("maup")
 __all__ = [
     "adjacencies",
     "AssigmentWarning",

@@ -14,13 +14,6 @@ Welcome to MAUP's documentation!
 
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Releases
-
-   release_notes
-
-
-.. toctree::
    :maxdepth: 2
    :caption: Tutorials
 
@@ -35,6 +28,14 @@ Welcome to MAUP's documentation!
 
    with_gerrychain/real-life_plan
    with_gerrychain/islands
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Releases
+
+   release_notes
+
 
 .. Installation
 .. ------------
