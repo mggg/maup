@@ -174,7 +174,7 @@ class TestResolveOverlaps:
         assert not (inters.area > 0).any()
 
     def test_returns_same_if_no_overlaps(self, four_square_grid):
-        assert resolve_overlaps(four_square_grid) is four_square_grid.geometry
+        assert resolve_overlaps(four_square_grid).equals(four_square_grid.geometry)
 
     def test_assigns_overlap_by_max_shared_perimeter(self):
         """The overlapping area should be assigned to the polygon that shares

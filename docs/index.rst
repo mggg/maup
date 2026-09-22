@@ -14,6 +14,13 @@ Welcome to MAUP's documentation!
 
 
 .. toctree::
+   :maxdepth: 1
+   :caption: Releases
+
+   release_notes
+
+
+.. toctree::
    :maxdepth: 2
    :caption: Tutorials
 

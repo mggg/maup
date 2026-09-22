@@ -19,7 +19,6 @@ from .crs import require_same_crs
 from .indexed_geometries import get_geometries
 from .intersections import intersections
 
-
 """
 Some of these functions are based on the functions in Mary Barker's
 check_shapefile_connectivity.py script in @gerrymandr/Preprocessing.

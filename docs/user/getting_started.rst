@@ -37,6 +37,11 @@ covers it. (Here, geometry *A* *covers* geometry *B* if every point of
 is not covered by one single target geometry, it is assigned to the
 target geometry that covers the largest portion of its area.
 
+The returned Series is indexed like ``sources`` and contains labels from ``targets.index``,
+including string or tuple labels. Sources that cannot be assigned have missing values and trigger an
+``AssigmentWarning``. Use ``assignment.isna()`` to identify them. The output dtype matches the
+target index when possible, but can be ``object`` when missing assignments prevent that conversion.
+
 .. code:: python
 
    >>> import maup

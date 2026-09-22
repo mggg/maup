@@ -12,6 +12,8 @@
 #
 import os
 import sys
+import tomllib
+from pathlib import Path
 
 sys.path.insert(0, os.path.abspath(".."))
 
@@ -29,7 +31,9 @@ copyright = "2023, MGGG"
 author = "Jeanne Clelland, Max Fan, Max Hully "
 
 # The full version, including alpha/beta/rc tags
-release = "2.0.3"
+release = tomllib.loads(
+    (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text()
+)["project"]["version"]
 
 
 # -- General configuration ---------------------------------------------------

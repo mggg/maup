@@ -7,18 +7,23 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [3.11, 3.13]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
         os: [ubuntu-latest, macOS-latest]
+        pandas-version: ["2.3.3", "3.0.6"]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v7
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip poetry
           poetry install
+      - name: Install pandas ${{ matrix.pandas-version }}
+        run: |
+          poetry run python -m pip install "pandas==${{ matrix.pandas-version }}"
+          poetry run python -m pip check
       - name: Test
         run: poetry run pytest

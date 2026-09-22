@@ -141,6 +141,22 @@ def test_assign_dispatches_to_without_area_and_with_area(
     assert (expected == assignment).all()
 
 
+@pytest.mark.parametrize("labels", [["a", "b"], [(0, "a"), (1, "b")], [10, 20]])
+def test_assign_preserves_labels_with_area_fallback_and_unassigned_sources(
+    four_square_grid, squares_some_neat_some_overlapping, labels
+):
+    targets = four_square_grid.iloc[:2].copy()
+    targets.index = pandas.Index(labels)
+
+    with pytest.warns(AssigmentWarning):
+        assignment = assign(squares_some_neat_some_overlapping, targets)
+
+    assert assignment.index.equals(squares_some_neat_some_overlapping.index)
+    assert assignment.iloc[:3].tolist() == [labels[0], labels[0], labels[1]]
+    assert pandas.isna(assignment.iloc[3])
+    assert assignment.iloc[4] == labels[1]
+
+
 def test_example_case():
     # Losely based off test_example_case function in test_prorate.py
     blocks = geopandas.read_file("zip://./examples/blocks.zip")

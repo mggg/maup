@@ -15,14 +15,21 @@ def assign(sources, targets):
     """Assign source geometries to targets. A source is assigned to the
     target that covers it, or, if no target covers the entire source, the
     target that covers the most of its area.
+
+    Returns a pandas Series indexed like sources, with labels from targets.index. Labels may be
+    numeric, strings, or tuples. Unassigned sources have missing values and trigger an
+    AssigmentWarning; use Series.isna() to find them. The result uses the target index's dtype when
+    conversion is possible, otherwise it retains object dtype to accommodate labels and missing
+    values.
     """
-    assignment = pandas.Series(assign_by_covering(sources, targets), dtype="float")
+    # Target labels may be strings or tuples; object also accommodates missing assignments.
+    assignment = pandas.Series(assign_by_covering(sources, targets), dtype=object)
     assignment.name = None
     unassigned = sources[assignment.isna()]
 
     if len(unassigned):  # skip if done
         assignments_by_area = pandas.Series(
-            assign_by_area(unassigned, targets), dtype="float"
+            assign_by_area(unassigned, targets), dtype=object
         )
         assignment.update(assignments_by_area)
 

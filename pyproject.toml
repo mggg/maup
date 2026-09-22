@@ -16,12 +16,13 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Operating System :: OS Independent",
 ]
 dependencies = [
     "numpy>=2.4.6,<3.0.0; python_version < '3.12'",
     "numpy>=2.5.3,<3.0.0; python_version >= '3.12'",
-    "pandas>=2.3.3,<3.0.0",
+    "pandas>=2.3.3,<4.0.0",
     "geopandas>=1.1.4,<2.0.0",
     "shapely>=2.1.2,<3.0.0",
     "tqdm>=4.70.1,<5.0.0",
@@ -34,10 +35,11 @@ dependencies = [
 dev = [
     "pytest>=9.1.1,<10.0.0",
     "pytest-cov>=7.1.0,<8.0.0",
-    "sphinx>=8.2.3,<9.0.0",
-    "numpydoc>=1.9.0,<2.0.0",
-    "pydata-sphinx-theme>=0.16.1,<0.17.0",
-    "myst-parser>=4.0.1,<5.0.0",
+    "sphinx>=8.2.3,<9.0.0; python_version < '3.12'",
+    "sphinx>=9.1.0,<10.0.0; python_version >= '3.12'",
+    "numpydoc>=1.11.0,<2.0.0",
+    "pydata-sphinx-theme>=0.21.0,<0.22.0",
+    "myst-parser>=5.1.0,<6.0.0",
     "sphinx-copybutton>=0.5.2,<0.6.0",
     "sphinx-rtd-theme>=3.1.0,<4.0.0",
     "black>=26.5.1,<27.0.0",
@@ -52,5 +54,5 @@ include = ["best-practices.md"]
 exclude = ["examples", "tests"]
 
 [build-system]
-requires = ["poetry-core>=2.2.0"]
+requires = ["poetry-core>=2.5.0"]
 build-backend = "poetry.core.masonry.api"
