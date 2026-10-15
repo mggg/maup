@@ -27,3 +27,25 @@ jobs:
           poetry run python -m pip check
       - name: Test
         run: poetry run pytest
+
+  interoperability:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - python-version: "3.12"
+            packages: '".[legacy]" pytest'
+          - python-version: "3.14"
+            packages: '. pytest "gerrychain>=1,<2" "gerrytools>=2,<3" "geopandas>=1.2,<2"'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install interoperability dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ${{ matrix.packages }}
+          python -m pip check
+      - name: Test
+        run: python -m pytest

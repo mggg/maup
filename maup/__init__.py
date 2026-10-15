@@ -1,6 +1,5 @@
 from importlib.metadata import version as _distribution_version
 
-import geopandas
 from .adjacencies import adjacencies
 from .assign import assign, AssigmentWarning
 from .indexed_geometries import IndexedGeometries
@@ -17,14 +16,6 @@ from .repair import (
 from .smart_repair import smart_repair
 from .normalize import normalize
 from .progress_bar import progress
-
-# warn about https://github.com/geopandas/geopandas/issues/2199
-if geopandas.options.use_pygeos:
-    raise ImportError(
-        "GerryChain cannot use GeoPandas when PyGeos is enabled. Disable or "
-        "uninstall PyGeos. You can disable PyGeos in GeoPandas by setting "
-        "`geopandas.options.use_pygeos = False` before importing your shapefile."
-    )
 
 __version__ = _distribution_version("maup")
 __all__ = [

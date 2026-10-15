@@ -1,6 +1,6 @@
 [project]
 name = "maup"
-version = "2.1.0"
+version = "2.1.1"
 description = "The geospatial toolkit for redistricting data"
 authors = [
     { name = "Metric Geometry and Gerrymandering Group", email = "dev@mggg.org" },
@@ -29,6 +29,14 @@ dependencies = [
     "pyproj>=3.7.2; python_version < '3.12'",
     "pyproj>=3.8.0; python_version >= '3.12'",
     "pyogrio>=0.13.0,<0.14.0",
+]
+
+[project.optional-dependencies]
+legacy = [
+    "gerrychain==0.3.2",
+    "gerrytools==1.2.1",
+    "pandas<3",
+    "geopandas<1.2",
 ]
 
 [dependency-groups]

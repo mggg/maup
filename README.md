@@ -28,6 +28,24 @@ To install `maup` from PyPI, run `pip install maup` from your terminal.
 For development, `maup` uses [Poetry](https://python-poetry.org/docs/basic-usage/).
 To develop new `maup` features, clone this repository and run `poetry install`.
 
+### GerryChain and gerrytools compatibility
+
+Maup supports GerryChain 1.x and gerrytools 2.x with pandas 3. For workflows that
+use GerryChain 0.3.2 and gerrytools 1.2.1, the `legacy` extra selects those versions
+with pandas below 3 and GeoPandas below 1.2. Install it in a fresh environment:
+
+```sh
+python -m pip install "maup[legacy]>=2.1.1,<3"
+python -m pip check
+```
+
+Maup 2.1.1 fixes imports with GeoPandas 1.2. The legacy extra retains the
+GeoPandas cap because the older GerryChain and gerrytools versions still access
+the removed PyGEOS option.
+
+See the [release notes](docs/release_notes.rst) for tested combinations and
+incompatible older releases.
+
 ## Examples
 
 Here are some basic situations where you might find `maup` helpful. For these

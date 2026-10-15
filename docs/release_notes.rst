@@ -1,6 +1,23 @@
 Release notes
 =============
 
+2.1.1
+-----
+
+* Fixed the import failure with GeoPandas 1.2 by removing maup's obsolete
+  ``use_pygeos`` check.
+* Added a ``legacy`` extra that pins GerryChain 0.3.2 and gerrytools 1.2.1 with
+  pandas below 3 and GeoPandas below 1.2. Both older packages access the removed
+  PyGEOS option. Pinning GerryChain also prevents gerrytools 1.2.1 from selecting
+  GerryChain 1.x, whose graph API has changed. Base dependency bounds are unchanged.
+* Added integration tests for the legacy extra and for GerryChain 1.x with
+  gerrytools 2.x, pandas 3, and GeoPandas 1.2 or newer. CI resolves dependencies
+  independently of the lockfile to catch incompatibilities introduced by updates.
+
+Gerrytools 1.2.0 requires ``maup<=1.1.0`` and ``pandas<2``, so it cannot be used
+with modern maup. Upgrade to gerrytools 1.2.1 to use the legacy extra. Maup 2.0.3
+requires pandas below 3 and cannot be combined with GerryChain 1.x.
+
 2.1.0
 -----
 
