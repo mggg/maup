@@ -50,7 +50,7 @@ dev = [
     "myst-parser>=5.1.0,<6.0.0",
     "sphinx-copybutton>=0.5.2,<0.6.0",
     "sphinx-rtd-theme>=3.1.0,<4.0.0",
-    "black>=26.5.1,<27.0.0",
+    "black>=26.10.1,<27.0.0",
     "ipykernel>=7.3.0,<8.0.0",
     "python-dateutil>=2.9.0.post0,<3.0.0",
 ]
